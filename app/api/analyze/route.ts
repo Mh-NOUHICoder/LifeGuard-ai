@@ -21,21 +21,37 @@ export async function POST(request: NextRequest) {
 
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-    const prompt = `You are an emergency response AI. Analyze this image and determine if it shows an emergency.
+    const languageMap: { [key: string]: string } = {
+      'English': 'English',
+      'Arabic': 'Arabic (العربية)',
+      'French': 'French (Français)'
+    };
 
-CRITICAL INSTRUCTION - LANGUAGE REQUIREMENT:
-You MUST respond ONLY in ${language || 'English'}. Every single word, including JSON keys and values, must be in ${language || 'English'}.
-Do NOT respond in any other language. If you cannot respond in ${language || 'English'}, respond with an error message in ${language || 'English'}.
+    const langName = languageMap[language as string] || 'English';
 
-Respond with ONLY valid JSON in this exact format (with all content in ${language || 'English'}):
+    const prompt = `You are an emergency response AI assistant. Analyze this image to determine if it depicts an emergency situation.
+
+LANGUAGE INSTRUCTION:
+Respond with translations in ${langName} ONLY for the content values.
+Keep the JSON structure and keys exactly as shown below - do NOT translate JSON keys.
+
+RESPOND WITH ONLY THIS EXACT JSON FORMAT:
 {
-  "type": "Severe Bleeding" | "Fire or Smoke" | "Not an Emergency",
-  "dangerLevel": "CRITICAL" | "HIGH" | "MODERATE" | "LOW",
-  "actions": ["action 1", "action 2", "action 3"],
-  "warning": "urgent message or empty string"
+  "type": "Severe Bleeding",
+  "dangerLevel": "CRITICAL",
+  "actions": ["action steps here"],
+  "warning": "warning message"
 }
 
-Remember: ALL text must be in ${language || 'English'}.`;
+TRANSLATION RULES:
+- Keep keys: "type", "dangerLevel", "actions", "warning" (in English)
+- Translate ONLY the values to ${langName}
+- For "type": use one of: "Severe Bleeding", "Fire or Smoke", "Not an Emergency" (in ${langName})
+- For "dangerLevel": use one of: "CRITICAL", "HIGH", "MODERATE", "LOW" (keep in English)
+- For "actions": provide 2-3 action steps (in ${langName})
+- For "warning": provide urgent warning (in ${langName}, or empty string "")
+
+IMPORTANT: Return ONLY the JSON with NO additional text or explanation.`;
 
     const parts: any[] = [
       { text: prompt },
@@ -48,7 +64,7 @@ Remember: ALL text must be in ${language || 'English'}.`;
     ];
 
     console.log("[Analyze API] Sending to Gemini with model: gemini-3-flash-preview");
-    console.log("[Analyze API] Language:", language);
+    console.log("[Analyze API] Language:", language, "->", langName);
     console.log("[Analyze API] Image size:", image.length, "bytes");
 
     const response = await ai.models.generateContent({
@@ -60,25 +76,53 @@ Remember: ALL text must be in ${language || 'English'}.`;
     });
 
     const text = response.text || "{}";
-    console.log("[Analyze API] Response received:", text.substring(0, 300));
+    console.log("[Analyze API] Raw response:", text.substring(0, 500));
 
-    // Parse JSON
+    // Parse JSON with robust extraction
     let parsed: any;
     try {
       parsed = JSON.parse(text);
-    } catch {
+      console.log("[Analyze API] Successfully parsed JSON");
+    } catch (e) {
+      console.log("[Analyze API] JSON parse failed, attempting extraction...");
+      // Extract JSON from response even if surrounded by text
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        parsed = JSON.parse(jsonMatch[0]);
+        try {
+          parsed = JSON.parse(jsonMatch[0]);
+          console.log("[Analyze API] Extracted and parsed JSON");
+        } catch (innerE) {
+          console.error("[Analyze API] Failed to parse extracted JSON:", innerE);
+          throw new Error(`Invalid JSON response: ${text.substring(0, 100)}`);
+        }
       } else {
-        throw new Error("Invalid JSON response");
+        throw new Error(`No JSON found in response: ${text}`);
       }
     }
 
-    // Validate
-    if (!parsed.type || !parsed.dangerLevel || !Array.isArray(parsed.actions)) {
-      throw new Error("Missing required fields in response");
+    console.log("[Analyze API] Parsed data:", parsed);
+
+    // Validate required fields
+    if (!parsed.type) {
+      throw new Error("Missing 'type' field in response");
     }
+    if (!parsed.dangerLevel) {
+      throw new Error("Missing 'dangerLevel' field in response");
+    }
+    if (!Array.isArray(parsed.actions)) {
+      throw new Error("'actions' must be an array");
+    }
+
+    // Ensure dangerLevel is one of the expected values (case-insensitive)
+    const validLevels = ['CRITICAL', 'HIGH', 'MODERATE', 'LOW'];
+    const normalizedLevel = parsed.dangerLevel.toUpperCase();
+    if (!validLevels.includes(normalizedLevel)) {
+      parsed.dangerLevel = 'MODERATE'; // Default if invalid
+    } else {
+      parsed.dangerLevel = normalizedLevel;
+    }
+
+    console.log("[Analyze API] Analysis complete. Type:", parsed.type, "Level:", parsed.dangerLevel);
 
     return NextResponse.json({ success: true, data: parsed });
   } catch (error: any) {
