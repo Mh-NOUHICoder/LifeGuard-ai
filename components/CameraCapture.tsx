@@ -1,13 +1,14 @@
 'use client';
 
 import React, { RefObject } from 'react';
-import { Camera, X } from 'lucide-react';
+import { Camera, X, SwitchCamera } from 'lucide-react';
 
 interface CameraCaptureProps {
   videoRef: RefObject<HTMLVideoElement | null>;
   isAnalyzing: boolean;
   onAnalyze: () => void;
   onStop: () => void;
+  onFlipCamera: () => void;
 }
 
 export default function CameraCapture({
@@ -15,6 +16,7 @@ export default function CameraCapture({
   isAnalyzing,
   onAnalyze,
   onStop,
+  onFlipCamera,
 }: CameraCaptureProps) {
   return (
     <div className="space-y-6">
@@ -40,6 +42,15 @@ export default function CameraCapture({
         <div className="absolute top-4 right-4 px-3 py-1 bg-red-600 text-[10px] font-bold rounded-full animate-pulse">
           REC ●
         </div>
+
+        {/* Flip Camera Button */}
+        <button
+          onClick={onFlipCamera}
+          className="absolute top-4 left-4 p-2 bg-slate-800/60 hover:bg-slate-700/80 rounded-full transition-colors backdrop-blur-sm"
+          title="Flip camera"
+        >
+          <SwitchCamera className="w-5 h-5 text-white" />
+        </button>
       </div>
 
       {/* Control Buttons */}
@@ -60,7 +71,7 @@ export default function CameraCapture({
 
       {/* Floating Analyze Button */}
       <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-2xl mx-auto space-y-3">
           <button
             onClick={onAnalyze}
             disabled={isAnalyzing}
@@ -71,8 +82,20 @@ export default function CameraCapture({
             }`}
           >
             <Camera className={isAnalyzing ? 'animate-pulse' : ''} />
-            {isAnalyzing ? 'PROCESSING...' : 'ANALYZE SCENE'}
+            {isAnalyzing ? (
+              <>
+                <span className="animate-spin inline-block mr-1">⏳</span>
+                PROCESSING...
+              </>
+            ) : (
+              'ANALYZE SCENE'
+            )}
           </button>
+          {!isAnalyzing && (
+            <p className="text-xs text-slate-400 text-center">
+              Point camera at emergency scene and tap to analyze
+            </p>
+          )}
         </div>
       </div>
     </div>

@@ -144,3 +144,107 @@ export function isSecureContext(): boolean {
   if (typeof window === 'undefined') return false;
   return window.isSecureContext || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 }
+/**
+ * Request media with specific facing mode (for camera flip)
+ */
+export async function requestMediaPermissionsWithFacing(
+  facingMode: 'user' | 'environment' = 'environment'
+): Promise<{
+  camera: boolean;
+  microphone: boolean;
+  stream?: MediaStream;
+  error?: string;
+}> {
+  try {
+    console.log(`Requesting media with facing mode: ${facingMode}...`);
+
+    const constraintOptions = [
+      {
+        video: {
+          facingMode: { ideal: facingMode },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+        },
+      },
+      {
+        video: {
+          facingMode: facingMode,
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+        },
+        audio: true,
+      },
+      {
+        video: { facingMode: facingMode },
+        audio: true,
+      },
+      {
+        video: true,
+        audio: true,
+      },
+    ];
+
+    let stream: MediaStream | null = null;
+    let lastError: Error | null = null;
+
+    for (let i = 0; i < constraintOptions.length; i++) {
+      try {
+        console.log(`Attempt ${i + 1}: Requesting with facing mode:`, facingMode);
+        stream = await navigator.mediaDevices.getUserMedia(constraintOptions[i]);
+        console.log(`✓ Success on attempt ${i + 1}`);
+        break;
+      } catch (err) {
+        lastError = err as Error;
+        console.warn(`Attempt ${i + 1} failed:`, (err as Error).message);
+      }
+    }
+
+    if (!stream) {
+      throw lastError || new Error('Failed to get media stream after all attempts');
+    }
+
+    console.log('Media stream acquired successfully');
+    console.log('Video tracks:', stream.getVideoTracks().length);
+    console.log('Audio tracks:', stream.getAudioTracks().length);
+
+    return {
+      camera: stream.getVideoTracks().length > 0,
+      microphone: stream.getAudioTracks().length > 0,
+      stream,
+    };
+  } catch (err) {
+    let errorMessage = 'Permission denied';
+
+    if (err instanceof DOMException) {
+      console.error(`DOMException: ${err.name} - ${err.message}`);
+
+      if (err.name === 'NotAllowedError') {
+        errorMessage = 'Permission denied - click Allow when prompted';
+      } else if (err.name === 'NotFoundError') {
+        errorMessage = 'No camera or microphone found on this device';
+      } else if (err.name === 'NotReadableError') {
+        errorMessage = 'Camera/Mic is in use by another app - close it and retry';
+      } else if (err.name === 'SecurityError') {
+        errorMessage = 'This site cannot access camera/mic - try HTTPS or localhost';
+      } else if (err.name === 'TypeError') {
+        errorMessage = 'getUserMedia not supported on this browser';
+      } else {
+        errorMessage = `${err.name}: ${err.message}`;
+      }
+    } else {
+      console.error('Unknown error:', err);
+      errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+    }
+
+    console.error('Final error:', errorMessage);
+    return {
+      camera: false,
+      microphone: false,
+      error: errorMessage,
+    };
+  }
+}

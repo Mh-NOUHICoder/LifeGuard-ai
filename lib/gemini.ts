@@ -13,93 +13,39 @@ export const analyzeEmergency = async (
   audioBuffer: string | null,
   lang: Language
 ): Promise<EmergencyInstruction> => {
-  const model = 'gemini-2.0-flash-001';
-
-  const prompt = `You are an emergency response AI assistant specialized in real-time emergency detection.
-Your mission is to save lives and minimize harm. Analyze the provided image${audioBuffer ? ' and audio' : ''}.
-Target Language: ${lang}
-
-You MUST determine the emergency situation as one of:
-- Severe Bleeding (heavy bleeding, blood loss, wounds)
-- Fire or Smoke (flames, smoke, fire emergency)
-- Not an Emergency (no emergency situation)
-
-Critical Rules:
-- Do NOT describe the scene. Focus ONLY on immediate life-saving actions.
-- Give short, commanding instructions (1-3 steps maximum).
-- If it's a real emergency, ALWAYS include a step to call emergency services immediately.
-- Be extremely clear and concise.
-- Use the specified language for ALL output.
-- Return valid JSON only - no markdown or extra text.`;
-
-  const responseSchema = {
-    type: Type.OBJECT,
-    properties: {
-      type: {
-        type: Type.STRING,
-        description: "Emergency type: 'Severe Bleeding', 'Fire or Smoke', or 'Not an Emergency'",
-      },
-      dangerLevel: {
-        type: Type.STRING,
-        enum: ["CRITICAL", "HIGH", "MODERATE", "LOW"],
-        description: "Danger level assessment",
-      },
-      actions: {
-        type: Type.ARRAY,
-        items: { type: Type.STRING },
-        description: "1-3 immediate life-saving steps in the specified language",
-      },
-      warning: {
-        type: Type.STRING,
-        description: "Critical warning if needed (e.g., 'CALL EMERGENCY SERVICES IMMEDIATELY')",
-      },
-    },
-    required: ["type", "dangerLevel", "actions"],
-  };
-
-  const parts: any[] = [
-    { text: prompt },
-    {
-      inlineData: {
-        mimeType: "image/jpeg",
-        data: imageBuffer,
-      },
-    },
-  ];
-
-  if (audioBuffer) {
-    parts.push({
-      inlineData: {
-        mimeType: "audio/wav",
-        data: audioBuffer,
-      },
-    });
-  }
-
   try {
-    const response = await ai.models.generateContent({
-      model,
-      contents: [{ parts }],
-      config: {
-        responseMimeType: "application/json",
-        responseSchema,
-        temperature: 0.1,
-      },
+    console.log('[analyzeEmergency] Starting analysis...');
+    console.log('[analyzeEmergency] Image size:', imageBuffer?.length || 0, 'bytes');
+    console.log('[analyzeEmergency] Audio included:', !!audioBuffer);
+    console.log('[analyzeEmergency] Language:', lang);
+
+    // Call the API endpoint
+    const response = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        image: imageBuffer,
+        audio: audioBuffer,
+        language: lang,
+      }),
     });
 
-    const text = response.text || "{}";
-    const parsed = JSON.parse(text) as EmergencyInstruction;
-    
-    // Validate response
-    if (!parsed.type || !parsed.dangerLevel || !Array.isArray(parsed.actions)) {
-      throw new Error('Invalid response format from Gemini');
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `API error: ${response.status}`);
     }
 
-    return parsed;
+    const result = await response.json();
+    
+    if (!result.success) {
+      throw new Error(result.error || 'Analysis failed');
+    }
+
+    console.log('[analyzeEmergency] Analysis successful:', result.data.type);
+    return result.data as EmergencyInstruction;
   } catch (error) {
-    console.error('Gemini API Error:', error);
-    throw new Error(
-      `Failed to analyze emergency: ${error instanceof Error ? error.message : 'Unknown error'}`
-    );
+    console.error('[analyzeEmergency] Error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    throw new Error(`Failed to analyze emergency: ${errorMessage}`);
   }
 };

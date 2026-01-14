@@ -7,7 +7,7 @@ import { ShieldAlert, X } from 'lucide-react';
 import { Language, AppState, EmergencyType, EmergencyInstruction } from '@/types/gemini';
 import { analyzeEmergency } from '@/lib/gemini';
 import { speak as textToSpeech, stopSpeech } from '@/lib/tts';
-import { requestMediaPermissions, isSecureContext } from '@/lib/permissions';
+import { requestMediaPermissions, requestMediaPermissionsWithFacing, isSecureContext } from '@/lib/permissions';
 import EmergencyButton from '@/components/EmergencyButton';
 import CameraCapture from '@/components/CameraCapture';
 import DangerAlert from '@/components/DangerAlert';
@@ -28,6 +28,7 @@ const App: React.FC = () => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const cameraFacingRef = useRef<'user' | 'environment'>('environment');
 
   // Retry count for failed analyses
   const retryCountRef = useRef<number>(0);
@@ -60,8 +61,8 @@ const App: React.FC = () => {
         // Don't block, just warn - some local setups might not report secure context properly
       }
 
-      // Request permissions using the new utility
-      const result = await requestMediaPermissions();
+      // Request permissions using the facing mode
+      const result = await requestMediaPermissionsWithFacing(cameraFacingRef.current);
 
       if (!result.stream) {
         setState((p) => ({
@@ -141,55 +142,119 @@ const App: React.FC = () => {
     }
   };
 
+  // --- Flip Camera ---
+  const flipCamera = async () => {
+    try {
+      stopMediaTracks();
+      cameraFacingRef.current = cameraFacingRef.current === 'user' ? 'environment' : 'user';
+      await startCamera();
+    } catch (err) {
+      console.error('Flip camera error:', err);
+      setState((p) => ({
+        ...p,
+        error: 'Failed to flip camera. Try again.',
+      }));
+    }
+  };
+
   // --- Analysis Logic with Retry ---
   const captureAndAnalyze = async () => {
-    if (!videoRef.current || !canvasRef.current || state.isAnalyzing) return;
+    if (!videoRef.current || !canvasRef.current || state.isAnalyzing) {
+      console.warn('Capture skipped - conditions not met:', {
+        videoRef: !!videoRef.current,
+        canvasRef: !!canvasRef.current,
+        isAnalyzing: state.isAnalyzing,
+      });
+      return;
+    }
 
     setState((p) => ({ ...p, isAnalyzing: true, error: null }));
 
     try {
-      // 1. Capture Image
-      const canvas = canvasRef.current;
+      // 1. Validate video stream is ready
       const video = videoRef.current;
+      if (video.videoWidth === 0 || video.videoHeight === 0) {
+        throw new Error('Camera stream not ready. Please wait a moment and try again.');
+      }
+
+      // 2. Capture Image with validation
+      const canvas = canvasRef.current;
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
-      canvas.getContext('2d')?.drawImage(video, 0, 0);
-      const imageBase64 = canvas.toDataURL('image/jpeg', 0.85).split(',')[1];
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        throw new Error('Failed to get canvas context');
+      }
+      ctx.drawImage(video, 0, 0);
+      const imageDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      if (!imageDataUrl || imageDataUrl === 'data:,') {
+        throw new Error('Failed to capture image from camera');
+      }
+      const imageBase64 = imageDataUrl.split(',')[1];
+      if (!imageBase64) {
+        throw new Error('Invalid image data');
+      }
 
-      // 2. Capture Audio Chunk
+      console.log('Image captured successfully. Size:', imageBase64.length, 'bytes');
+
+      // 3. Capture Audio Chunk
       let audioBase64: string | null = null;
       if (mediaRecorderRef.current?.state === 'recording') {
         mediaRecorderRef.current.stop();
-        await new Promise((r) => setTimeout(r, 400));
+        await new Promise((r) => setTimeout(r, 500));
 
-        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        const reader = new FileReader();
-        audioBase64 = await new Promise<string | null>((resolve) => {
-          reader.onloadend = () => {
-            const result = reader.result as string;
-            resolve(result ? result.split(',')[1] : null);
-          };
-          reader.readAsDataURL(blob);
-        });
+        if (audioChunksRef.current.length === 0) {
+          console.warn('No audio chunks collected');
+        } else {
+          const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+          console.log('Audio blob created. Size:', blob.size, 'bytes');
+
+          const reader = new FileReader();
+          audioBase64 = await new Promise<string | null>((resolve) => {
+            reader.onloadend = () => {
+              const result = reader.result as string;
+              resolve(result ? result.split(',')[1] : null);
+            };
+            reader.onerror = () => {
+              console.error('FileReader error:', reader.error);
+              resolve(null);
+            };
+            reader.readAsDataURL(blob);
+          });
+
+          if (audioBase64) {
+            console.log('Audio captured successfully. Size:', audioBase64.length, 'bytes');
+          }
+        }
 
         audioChunksRef.current = [];
         mediaRecorderRef.current.start();
+      } else {
+        console.warn('MediaRecorder not in recording state');
       }
 
-      // 3. AI Analysis with timeout
+      // 4. AI Analysis with timeout and validation
+      console.log('Starting AI analysis...');
       const analysisPromise = analyzeEmergency(
         imageBase64,
         audioBase64,
         state.language
       );
       const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Analysis timeout')), 30000)
+        setTimeout(() => reject(new Error('Analysis took too long (>30 seconds). Check internet connection and try again.')), 30000)
       );
 
       const instruction: EmergencyInstruction = await Promise.race([
         analysisPromise,
         timeoutPromise,
       ]);
+
+      // Validate response
+      if (!instruction || !instruction.type) {
+        throw new Error('Invalid response from AI analysis');
+      }
+
+      console.log('Analysis completed:', instruction.type);
 
       setState((p) => ({
         ...p,
@@ -210,12 +275,24 @@ const App: React.FC = () => {
 
       speak(speechText);
     } catch (err) {
+      console.error('Full analysis error:', err);
+      let errorMsg = err instanceof Error ? err.message : 'Unknown error occurred';
+      
+      // Provide helpful context for common errors
+      if (errorMsg.includes('ENOTFOUND') || errorMsg.includes('ERR_NETWORK') || errorMsg.includes('Failed to fetch')) {
+        errorMsg = 'Network error - check your internet connection';
+      } else if (errorMsg.includes('401') || errorMsg.includes('403')) {
+        errorMsg = 'API authentication failed - check configuration';
+      } else if (errorMsg.includes('timeout')) {
+        errorMsg = 'Request timeout - server not responding';
+      }
+      
       if (retryCountRef.current < MAX_RETRIES) {
         retryCountRef.current++;
         setState((p) => ({
           ...p,
           isAnalyzing: false,
-          error: `Analysis failed (attempt ${retryCountRef.current}/${MAX_RETRIES}). Retrying...`,
+          error: `❌ Analysis failed (${retryCountRef.current}/${MAX_RETRIES}): ${errorMsg}. Retrying in 2 seconds...`,
         }));
         setTimeout(() => captureAndAnalyze(), 2000);
       } else {
@@ -223,7 +300,7 @@ const App: React.FC = () => {
           ...p,
           isAnalyzing: false,
           error:
-            'Analysis failed after multiple attempts. Check connection and try again.',
+            `Analysis failed after ${MAX_RETRIES} attempts: ${errorMsg}. Check connection and try again.`,
         }));
         retryCountRef.current = 0;
       }
@@ -294,6 +371,7 @@ const App: React.FC = () => {
                 isAnalyzing={state.isAnalyzing}
                 onAnalyze={captureAndAnalyze}
                 onStop={toggleEmergency}
+                onFlipCamera={flipCamera}
               />
 
               <AnimatePresence>
