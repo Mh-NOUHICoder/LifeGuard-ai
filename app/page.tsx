@@ -83,20 +83,46 @@ const App: React.FC = () => {
         };
       }
 
-      const recorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm',
-      });
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) audioChunksRef.current.push(e.data);
-      };
-      recorder.onerror = (e) => {
-        console.error('Recorder error:', e);
-      };
-      recorder.start();
-      mediaRecorderRef.current = recorder;
-      setState((p) => ({ ...p, error: null }));
-      retryCountRef.current = 0;
-      console.log('Camera and recorder started successfully');
+      // Create MediaRecorder with proper MIME type detection
+      let mimeType = '';
+      const possibleMimeTypes = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg'];
+      
+      for (const type of possibleMimeTypes) {
+        if (MediaRecorder.isTypeSupported(type)) {
+          mimeType = type;
+          console.log('Using MIME type:', mimeType);
+          break;
+        }
+      }
+
+      try {
+        const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
+        recorder.ondataavailable = (e) => {
+          if (e.data.size > 0) audioChunksRef.current.push(e.data);
+        };
+        recorder.onerror = (e) => {
+          console.error('Recorder error:', e);
+        };
+        recorder.start();
+        mediaRecorderRef.current = recorder;
+        setState((p) => ({ ...p, error: null }));
+        retryCountRef.current = 0;
+        console.log('Camera and recorder started successfully');
+      } catch (recorderErr) {
+        console.error('MediaRecorder initialization error:', recorderErr);
+        // If MediaRecorder fails, try without specifying MIME type
+        const fallbackRecorder = new MediaRecorder(stream);
+        fallbackRecorder.ondataavailable = (e) => {
+          if (e.data.size > 0) audioChunksRef.current.push(e.data);
+        };
+        fallbackRecorder.onerror = (e) => {
+          console.error('Recorder error:', e);
+        };
+        fallbackRecorder.start();
+        mediaRecorderRef.current = fallbackRecorder;
+        setState((p) => ({ ...p, error: null }));
+        console.log('MediaRecorder started with browser defaults');
+      }
     } catch (err) {
       console.error('startCamera error:', err);
       const errorMsg =

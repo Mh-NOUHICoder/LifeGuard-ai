@@ -31,43 +31,74 @@ export async function requestMediaPermissions(): Promise<{
   try {
     console.log('Requesting media permissions...');
     
-    // Try different MIME types for better browser compatibility
-    const mimeTypes = ['audio/webm', 'audio/mp4', 'audio/wav'];
-    let mimeType = 'audio/webm';
+    // Try different constraint levels with fallbacks
+    const constraintOptions = [
+      // Try 1: Full featured
+      {
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+        },
+      },
+      // Try 2: Basic constraints
+      {
+        video: { width: { ideal: 640 }, height: { ideal: 480 } },
+        audio: true,
+      },
+      // Try 3: Minimal constraints
+      {
+        video: true,
+        audio: true,
+      },
+      // Try 4: Video only
+      {
+        video: true,
+        audio: false,
+      },
+      // Try 5: Audio only
+      {
+        video: false,
+        audio: true,
+      },
+    ];
 
-    // Test which MIME type is supported
-    for (const type of mimeTypes) {
+    let stream: MediaStream | null = null;
+    let lastError: Error | null = null;
+
+    for (let i = 0; i < constraintOptions.length; i++) {
       try {
-        if (MediaRecorder.isTypeSupported(type)) {
-          mimeType = type;
-          break;
-        }
-      } catch (e) {
-        // Continue trying other types
+        console.log(`Attempt ${i + 1}: Requesting with constraints:`, constraintOptions[i]);
+        stream = await navigator.mediaDevices.getUserMedia(constraintOptions[i]);
+        console.log(`✓ Success on attempt ${i + 1}`);
+        break;
+      } catch (err) {
+        lastError = err as Error;
+        console.warn(`Attempt ${i + 1} failed:`, (err as Error).message);
       }
     }
 
-    console.log(`Using MIME type: ${mimeType}`);
+    if (!stream) {
+      throw lastError || new Error('Failed to get media stream after all attempts');
+    }
 
-    // Request both camera and microphone with simpler constraints
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: 'environment',
-      },
-      audio: true,
-    });
+    console.log('Media stream acquired successfully');
+    console.log('Video tracks:', stream.getVideoTracks().length);
+    console.log('Audio tracks:', stream.getAudioTracks().length);
 
-    console.log('Media permissions granted');
     return {
-      camera: true,
-      microphone: true,
+      camera: stream.getVideoTracks().length > 0,
+      microphone: stream.getAudioTracks().length > 0,
       stream,
     };
   } catch (err) {
     let errorMessage = 'Permission denied';
 
     if (err instanceof DOMException) {
-      console.error(`DOMException: ${err.name}`);
+      console.error(`DOMException: ${err.name} - ${err.message}`);
       
       if (err.name === 'NotAllowedError') {
         errorMessage = 'Permission denied - click Allow when prompted';
@@ -79,12 +110,15 @@ export async function requestMediaPermissions(): Promise<{
         errorMessage = 'This site cannot access camera/mic - try HTTPS or localhost';
       } else if (err.name === 'TypeError') {
         errorMessage = 'getUserMedia not supported on this browser';
+      } else {
+        errorMessage = `${err.name}: ${err.message}`;
       }
     } else {
       console.error('Unknown error:', err);
+      errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
     }
 
-    console.error('Permission result error:', errorMessage);
+    console.error('Final error:', errorMessage);
     return {
       camera: false,
       microphone: false,
