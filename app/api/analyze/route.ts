@@ -23,12 +23,14 @@ export async function POST(request: NextRequest) {
 
     const prompt = `You are an emergency response AI. Analyze this image and determine if it shows an emergency.
 
+IMPORTANT: Respond ONLY in ${language || 'English'}. All text must be in this language.
+
 Respond with ONLY valid JSON in this exact format:
 {
   "type": "Severe Bleeding" | "Fire or Smoke" | "Not an Emergency",
   "dangerLevel": "CRITICAL" | "HIGH" | "MODERATE" | "LOW",
-  "actions": ["action 1", "action 2"],
-  "warning": "urgent message or empty string"
+  "actions": ["action 1 in ${language || 'English'}", "action 2 in ${language || 'English'}"],
+  "warning": "urgent message in ${language || 'English'} or empty string"
 }`;
 
     const parts: any[] = [
@@ -42,6 +44,7 @@ Respond with ONLY valid JSON in this exact format:
     ];
 
     console.log("[Analyze API] Sending to Gemini with model: gemini-3-flash-preview");
+    console.log("[Analyze API] Language:", language);
     console.log("[Analyze API] Image size:", image.length, "bytes");
 
     const response = await ai.models.generateContent({
