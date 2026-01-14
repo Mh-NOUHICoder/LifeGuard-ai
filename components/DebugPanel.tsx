@@ -2,6 +2,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { ChevronDown, CheckCircle, AlertCircle } from 'lucide-react';
+import { Language } from '@/types/gemini';
+import { t } from '@/lib/translations';
 
 interface DebugInfo {
   https: boolean;
@@ -11,7 +13,11 @@ interface DebugInfo {
   canvas: boolean;
 }
 
-export default function DebugPanel() {
+interface DebugPanelProps {
+  language?: Language;
+}
+
+export default function DebugPanel({ language = Language.ENGLISH }: DebugPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [debugInfo, setDebugInfo] = useState<DebugInfo>({
     https: false,

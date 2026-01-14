@@ -369,6 +369,7 @@ const App: React.FC = () => {
               <CameraCapture
                 videoRef={videoRef}
                 isAnalyzing={state.isAnalyzing}
+                language={state.language}
                 onAnalyze={captureAndAnalyze}
                 onStop={toggleEmergency}
                 onFlipCamera={flipCamera}
@@ -379,6 +380,7 @@ const App: React.FC = () => {
                   <div className="mt-6">
                     <DangerAlert
                       instruction={state.lastInstruction}
+                      language={state.language}
                       onSpeak={() => {
                         const speechText = [
                           state.lastInstruction!.type,

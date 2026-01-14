@@ -3,15 +3,18 @@
 import React from 'react';
 import { AlertCircle, Flame, Droplet, Volume2 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { EmergencyType, EmergencyInstruction } from '@/types/gemini';
+import { EmergencyType, EmergencyInstruction, Language } from '@/types/gemini';
+import { t } from '@/lib/translations';
 
 interface DangerAlertProps {
   instruction: EmergencyInstruction;
+  language: Language;
   onSpeak: () => void;
 }
 
 export default function DangerAlert({
   instruction,
+  language,
   onSpeak,
 }: DangerAlertProps) {
   const isDangerCritical =
@@ -52,13 +55,13 @@ export default function DangerAlert({
                 : 'text-orange-400'
             }`}
           >
-            Danger Level: {instruction.dangerLevel}
+            {t(language, 'emergency.dangerLevel')}: {instruction.dangerLevel}
           </span>
         </div>
         <button
           onClick={onSpeak}
           className="p-3 bg-slate-800 rounded-full hover:bg-slate-700 transition-colors"
-          title="Repeat instructions"
+          title={t(language, 'app.repeatInstructions')}
         >
           <Volume2 className="w-5 h-5" />
         </button>

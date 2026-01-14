@@ -2,10 +2,13 @@
 
 import React, { RefObject } from 'react';
 import { Camera, X, SwitchCamera } from 'lucide-react';
+import { Language } from '@/types/gemini';
+import { t } from '@/lib/translations';
 
 interface CameraCaptureProps {
   videoRef: RefObject<HTMLVideoElement | null>;
   isAnalyzing: boolean;
+  language: Language;
   onAnalyze: () => void;
   onStop: () => void;
   onFlipCamera: () => void;
@@ -14,6 +17,7 @@ interface CameraCaptureProps {
 export default function CameraCapture({
   videoRef,
   isAnalyzing,
+  language,
   onAnalyze,
   onStop,
   onFlipCamera,
@@ -34,38 +38,38 @@ export default function CameraCapture({
           <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm flex flex-col items-center justify-center">
             <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4" />
             <span className="font-bold text-blue-400 tracking-widest animate-pulse">
-              ANALYZING SCENE...
+              {t(language, 'app.analyzing')}
             </span>
           </div>
         )}
 
         <div className="absolute top-4 right-4 px-3 py-1 bg-red-600 text-[10px] font-bold rounded-full animate-pulse">
-          REC ●
+          {t(language, 'app.recording')} ●
         </div>
 
         {/* Flip Camera Button */}
         <button
           onClick={onFlipCamera}
           className="absolute top-4 left-4 p-2 bg-slate-800/60 hover:bg-slate-700/80 rounded-full transition-colors backdrop-blur-sm"
-          title="Flip camera"
+          title={t(language, 'app.flipCamera')}
         >
           <SwitchCamera className="w-5 h-5 text-white" />
         </button>
       </div>
 
       {/* Control Buttons */}
-      <div className="flex gap-4">
+      <div className="flex gap-2 sm:gap-4 flex-wrap">
         <button
           onClick={() => window.open('tel:911')}
-          className="flex-1 bg-white text-black h-16 rounded-2xl font-black flex items-center justify-center gap-3 hover:bg-slate-200 transition-colors shadow-lg"
+          className="flex-1 min-w-max bg-white text-black h-14 sm:h-16 rounded-2xl font-black text-sm sm:text-base flex items-center justify-center gap-2 hover:bg-slate-200 transition-colors shadow-lg"
         >
-          📞 CALL EMERGENCY
+          {t(language, 'app.callEmergency')}
         </button>
         <button
           onClick={onStop}
-          className="px-8 h-16 bg-slate-800 text-slate-300 rounded-2xl font-bold hover:bg-red-900/40 hover:text-red-400 transition-all flex items-center gap-2"
+          className="px-4 sm:px-8 h-14 sm:h-16 bg-slate-800 text-slate-300 rounded-2xl font-bold hover:bg-red-900/40 hover:text-red-400 transition-all flex items-center gap-2 whitespace-nowrap text-sm sm:text-base"
         >
-          <X className="w-5 h-5" /> EXIT
+          <X className="w-4 h-4 sm:w-5 sm:h-5" /> {t(language, 'app.exit')}
         </button>
       </div>
 
@@ -85,15 +89,15 @@ export default function CameraCapture({
             {isAnalyzing ? (
               <>
                 <span className="animate-spin inline-block mr-1">⏳</span>
-                PROCESSING...
+                {t(language, 'app.processing')}
               </>
             ) : (
-              'ANALYZE SCENE'
+              t(language, 'app.analyzeScene')
             )}
           </button>
           {!isAnalyzing && (
             <p className="text-xs text-slate-400 text-center">
-              Point camera at emergency scene and tap to analyze
+              {t(language, 'app.pointCamera')}
             </p>
           )}
         </div>
