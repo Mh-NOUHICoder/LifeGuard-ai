@@ -356,7 +356,7 @@ const App: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-2xl mx-auto py-6 px-4 space-y-6 md:py-40">
+      <main className="max-w-2xl mx-auto py-6 px-4 space-y-6 md:py-40 pb-80 md:pb-40">
         <AnimatePresence mode="wait">
           {!state.isEmergencyActive ? (
             <EmergencyButton
@@ -365,7 +365,7 @@ const App: React.FC = () => {
               onStart={toggleEmergency}
             />
           ) : (
-            <motion.div key="active" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <motion.div key="active" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
               <CameraCapture
                 videoRef={videoRef}
                 isAnalyzing={state.isAnalyzing}
@@ -377,7 +377,7 @@ const App: React.FC = () => {
 
               <AnimatePresence>
                 {state.lastInstruction && (
-                  <div className="mt-6">
+                  <div className="mt-6 mb-24">
                     <DangerAlert
                       instruction={state.lastInstruction}
                       language={state.language}
