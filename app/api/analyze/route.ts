@@ -23,15 +23,19 @@ export async function POST(request: NextRequest) {
 
     const prompt = `You are an emergency response AI. Analyze this image and determine if it shows an emergency.
 
-IMPORTANT: Respond ONLY in ${language || 'English'}. All text must be in this language.
+CRITICAL INSTRUCTION - LANGUAGE REQUIREMENT:
+You MUST respond ONLY in ${language || 'English'}. Every single word, including JSON keys and values, must be in ${language || 'English'}.
+Do NOT respond in any other language. If you cannot respond in ${language || 'English'}, respond with an error message in ${language || 'English'}.
 
-Respond with ONLY valid JSON in this exact format:
+Respond with ONLY valid JSON in this exact format (with all content in ${language || 'English'}):
 {
   "type": "Severe Bleeding" | "Fire or Smoke" | "Not an Emergency",
   "dangerLevel": "CRITICAL" | "HIGH" | "MODERATE" | "LOW",
-  "actions": ["action 1 in ${language || 'English'}", "action 2 in ${language || 'English'}"],
-  "warning": "urgent message in ${language || 'English'} or empty string"
-}`;
+  "actions": ["action 1", "action 2", "action 3"],
+  "warning": "urgent message or empty string"
+}
+
+Remember: ALL text must be in ${language || 'English'}.`;
 
     const parts: any[] = [
       { text: prompt },
