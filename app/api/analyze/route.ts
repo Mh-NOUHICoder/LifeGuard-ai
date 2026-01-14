@@ -46,7 +46,8 @@ RESPOND WITH ONLY THIS EXACT JSON FORMAT:
   "type": "Severe Bleeding",
   "dangerLevel": "CRITICAL",
   "actions": ["action steps here"],
-  "warning": "warning message"
+  "warning": "warning message",
+  "reasoning": "brief explanation of analysis"
 }
 
 TRANSLATION RULES:
@@ -56,6 +57,7 @@ TRANSLATION RULES:
 - For "dangerLevel": use one of: "CRITICAL", "HIGH", "MODERATE", "LOW" (keep in English)
 - For "actions": provide 2-3 action steps (in ${langName})
 - For "warning": provide urgent warning (in ${langName}, or empty string "")
+- For "reasoning": 
 
 IMPORTANT: Return ONLY the JSON with NO additional text or explanation.`;
 
