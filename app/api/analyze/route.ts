@@ -29,7 +29,13 @@ export async function POST(request: NextRequest) {
 
     const langName = languageMap[language as string] || 'English';
 
-    const prompt = `You are an emergency response AI assistant. Analyze this image to determine if it depicts an emergency situation.
+    const prompt = `You are an emergency response AI assistant. Analyze the provided image and audio to determine if it depicts an emergency situation.
+
+ANALYZE BOTH:
+- Image: Visual scene analysis
+- Audio: Any sounds, voices, or audio cues (if provided)
+
+Use all available information to make the best emergency assessment.
 
 LANGUAGE INSTRUCTION:
 Respond with translations in ${langName} ONLY for the content values.
@@ -63,9 +69,21 @@ IMPORTANT: Return ONLY the JSON with NO additional text or explanation.`;
       },
     ];
 
-    console.log("[Analyze API] Sending to Gemini with model: gemini-3-flash-preview");
+    // Add audio data if provided
+    if (audio) {
+      console.log("[Analyze API] Audio data included, size:", audio.length, "bytes");
+      parts.push({
+        inlineData: {
+          mimeType: "audio/webm",
+          data: audio,
+        },
+      });
+    }
+
+    console.log("[Analyze API] Sending to Gemini with model: gemini-3-pro");
     console.log("[Analyze API] Language:", language, "->", langName);
     console.log("[Analyze API] Image size:", image.length, "bytes");
+    console.log("[Analyze API] Audio included:", !!audio);
 
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",

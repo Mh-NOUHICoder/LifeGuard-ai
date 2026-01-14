@@ -26,6 +26,7 @@ export default function DebugPanel({ language = Language.ENGLISH }: DebugPanelPr
     speechSynthesis: false,
     canvas: false,
   });
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
 
   useEffect(() => {
     const info: DebugInfo = {
@@ -36,6 +37,19 @@ export default function DebugPanel({ language = Language.ENGLISH }: DebugPanelPr
       canvas: typeof HTMLCanvasElement !== 'undefined',
     };
     setDebugInfo(info);
+
+    // Get available voices
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      const loadVoices = () => {
+        const availableVoices = window.speechSynthesis.getVoices();
+        setVoices(availableVoices);
+        console.log('[DebugPanel] Available voices:', availableVoices);
+      };
+
+      // Load voices - may need event listener
+      loadVoices();
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
   }, []);
 
   const allGood = Object.values(debugInfo).every(v => v);
@@ -56,7 +70,7 @@ export default function DebugPanel({ language = Language.ENGLISH }: DebugPanelPr
       </button>
 
       {isOpen && (
-        <div className="absolute bottom-12 right-0 bg-slate-800 border border-slate-700 rounded-lg p-3 w-64 text-xs space-y-2 text-slate-300">
+        <div className="absolute bottom-12 right-0 bg-slate-800 border border-slate-700 rounded-lg p-3 w-72 text-xs space-y-2 text-slate-300 max-h-96 overflow-y-auto">
           {Object.entries(debugInfo).map(([key, value]) => (
             <div key={key} className="flex justify-between items-center">
               <span className="capitalize">{key}:</span>
@@ -65,6 +79,23 @@ export default function DebugPanel({ language = Language.ENGLISH }: DebugPanelPr
               </span>
             </div>
           ))}
+          <div className="pt-2 border-t border-slate-700">
+            <p className="text-slate-400 font-bold mb-1">Available Voices ({voices.length}):</p>
+            {voices.length > 0 ? (
+              <div className="space-y-1">
+                {voices.map((voice, i) => (
+                  <div key={i} className="text-[10px] text-slate-400 truncate">
+                    <span className={voice.lang.includes('ar') ? 'text-blue-400' : voice.lang.includes('fr') ? 'text-purple-400' : 'text-green-400'}>
+                      {voice.name}
+                    </span>
+                    <span className="text-slate-500"> ({voice.lang})</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-red-400">No voices available</p>
+            )}
+          </div>
           <div className="pt-2 border-t border-slate-700 text-slate-400">
             <p>Check browser console for detailed logs</p>
           </div>
