@@ -117,6 +117,11 @@ export async function POST(request: NextRequest) {
       parsed.reasoning = "No specific reasoning provided.";
     }
 
+    // Enforce consistency: Non-emergencies should always be LOW risk
+    if (parsed.type.toLowerCase().includes('not an emergency')) {
+      parsed.dangerLevel = 'LOW';
+    }
+
     // Ensure dangerLevel is one of the expected values (case-insensitive)
     const normalizedLevel = parsed.dangerLevel.toUpperCase();
     parsed.dangerLevel = VALID_LEVELS.includes(normalizedLevel) 
