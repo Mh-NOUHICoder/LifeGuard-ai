@@ -1,12 +1,5 @@
 
-import { GoogleGenAI, Type } from "@google/genai";
-import { Language, EmergencyInstruction, EmergencyType, DangerLevel } from "@/types/gemini";
-
-if (!process.env.API_KEY) {
-  console.warn('GEMINI API_KEY not set in environment variables');
-}
-
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+import { Language, EmergencyInstruction } from "@/types/gemini";
 
 export const analyzeEmergency = async (
   imageBuffer: string,

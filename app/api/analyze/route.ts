@@ -1,9 +1,46 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
+import { getEmergencyPrompt } from "@/lib/prompt";
+
+interface AnalysisResponse {
+  type: string;
+  dangerLevel: string;
+  actions: string[];
+  warning: string;
+  reasoning: string;
+}
+
+const VALID_LEVELS = ['CRITICAL', 'HIGH', 'MODERATE', 'LOW'];
+
+const LANGUAGE_MAP: Record<string, string> = {
+  'English': 'English',
+  'Arabic': 'Arabic (العربية)',
+  'French': 'French (Français)'
+};
+
+const MODEL_NAME = "gemini-3-flash-preview";
 
 export async function POST(request: NextRequest) {
   try {
-    const { image, audio, language } = await request.json();
+    // Security: Validate API Key configuration early
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) {
+      console.error("[Analyze API] API_KEY not configured");
+      return NextResponse.json(
+        { success: false, error: "Server configuration error" },
+        { status: 500 }
+      );
+    }
+
+    // Security: Handle malformed JSON body
+    let body;
+    try {
+      body = await request.json();
+    } catch (e) {
+      return NextResponse.json({ success: false, error: "Invalid JSON body" }, { status: 400 });
+    }
+
+    const { image, audio, language } = body;
 
     if (!image) {
       return NextResponse.json(
@@ -12,54 +49,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!process.env.API_KEY) {
-      return NextResponse.json(
-        { success: false, error: "API_KEY not configured" },
-        { status: 500 }
-      );
-    }
+    const ai = new GoogleGenAI({ apiKey });
+    const langName = LANGUAGE_MAP[language as string] || 'English';
 
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
-    const languageMap: { [key: string]: string } = {
-      'English': 'English',
-      'Arabic': 'Arabic (العربية)',
-      'French': 'French (Français)'
-    };
-
-    const langName = languageMap[language as string] || 'English';
-
-    const prompt = `You are an emergency response AI assistant. Analyze the provided image and audio to determine if it depicts an emergency situation.
-
-ANALYZE BOTH:
-- Image: Visual scene analysis
-- Audio: Any sounds, voices, or audio cues (if provided)
-
-Use all available information to make the best emergency assessment.
-
-LANGUAGE INSTRUCTION:
-Respond with translations in ${langName} ONLY for the content values.
-Keep the JSON structure and keys exactly as shown below - do NOT translate JSON keys.
-
-RESPOND WITH ONLY THIS EXACT JSON FORMAT:
-{
-  "type": "Severe Bleeding",
-  "dangerLevel": "CRITICAL",
-  "actions": ["action steps here"],
-  "warning": "warning message",
-  "reasoning": "brief explanation of analysis"
-}
-
-TRANSLATION RULES:
-- Keep keys: "type", "dangerLevel", "actions", "warning" (in English)
-- Translate ONLY the values to ${langName}
-- For "type": use one of: "Severe Bleeding", "Fire or Smoke", "Not an Emergency" (in ${langName})
-- For "dangerLevel": use one of: "CRITICAL", "HIGH", "MODERATE", "LOW" (keep in English)
-- For "actions": provide 2-3 action steps (in ${langName})
-- For "warning": provide urgent warning (in ${langName}, or empty string "")
-- For "reasoning": 
-
-IMPORTANT: Return ONLY the JSON with NO additional text or explanation.`;
+    const prompt = getEmergencyPrompt(langName);
 
     const parts: any[] = [
       { text: prompt },
@@ -73,7 +66,6 @@ IMPORTANT: Return ONLY the JSON with NO additional text or explanation.`;
 
     // Add audio data if provided
     if (audio) {
-      console.log("[Analyze API] Audio data included, size:", audio.length, "bytes");
       parts.push({
         inlineData: {
           mimeType: "audio/webm",
@@ -82,13 +74,8 @@ IMPORTANT: Return ONLY the JSON with NO additional text or explanation.`;
       });
     }
 
-    console.log("[Analyze API] Sending to Gemini with model: gemini-3-pro");
-    console.log("[Analyze API] Language:", language, "->", langName);
-    console.log("[Analyze API] Image size:", image.length, "bytes");
-    console.log("[Analyze API] Audio included:", !!audio);
-
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: MODEL_NAME,
       contents: [{ parts }],
       config: {
         temperature: 0.1,
@@ -96,31 +83,25 @@ IMPORTANT: Return ONLY the JSON with NO additional text or explanation.`;
     });
 
     const text = response.text || "{}";
-    console.log("[Analyze API] Raw response:", text.substring(0, 500));
 
     // Parse JSON with robust extraction
-    let parsed: any;
+    let parsed: AnalysisResponse;
     try {
-      parsed = JSON.parse(text);
-      console.log("[Analyze API] Successfully parsed JSON");
+      parsed = JSON.parse(text) as AnalysisResponse;
     } catch (e) {
-      console.log("[Analyze API] JSON parse failed, attempting extraction...");
       // Extract JSON from response even if surrounded by text
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         try {
-          parsed = JSON.parse(jsonMatch[0]);
-          console.log("[Analyze API] Extracted and parsed JSON");
+          parsed = JSON.parse(jsonMatch[0]) as AnalysisResponse;
         } catch (innerE) {
           console.error("[Analyze API] Failed to parse extracted JSON:", innerE);
-          throw new Error(`Invalid JSON response: ${text.substring(0, 100)}`);
+          throw new Error("Failed to parse AI response");
         }
       } else {
-        throw new Error(`No JSON found in response: ${text}`);
+        throw new Error("Invalid AI response format");
       }
     }
-
-    console.log("[Analyze API] Parsed data:", parsed);
 
     // Validate required fields
     if (!parsed.type) {
@@ -132,17 +113,15 @@ IMPORTANT: Return ONLY the JSON with NO additional text or explanation.`;
     if (!Array.isArray(parsed.actions)) {
       throw new Error("'actions' must be an array");
     }
-
-    // Ensure dangerLevel is one of the expected values (case-insensitive)
-    const validLevels = ['CRITICAL', 'HIGH', 'MODERATE', 'LOW'];
-    const normalizedLevel = parsed.dangerLevel.toUpperCase();
-    if (!validLevels.includes(normalizedLevel)) {
-      parsed.dangerLevel = 'MODERATE'; // Default if invalid
-    } else {
-      parsed.dangerLevel = normalizedLevel;
+    if (!parsed.reasoning) {
+      parsed.reasoning = "No specific reasoning provided.";
     }
 
-    console.log("[Analyze API] Analysis complete. Type:", parsed.type, "Level:", parsed.dangerLevel);
+    // Ensure dangerLevel is one of the expected values (case-insensitive)
+    const normalizedLevel = parsed.dangerLevel.toUpperCase();
+    parsed.dangerLevel = VALID_LEVELS.includes(normalizedLevel) 
+      ? normalizedLevel 
+      : 'MODERATE';
 
     return NextResponse.json({ success: true, data: parsed });
   } catch (error: any) {
@@ -150,7 +129,7 @@ IMPORTANT: Return ONLY the JSON with NO additional text or explanation.`;
     return NextResponse.json(
       {
         success: false,
-        error: error?.message || "Analysis failed",
+        error: error instanceof Error ? error.message : "Analysis failed",
       },
       { status: 500 }
     );

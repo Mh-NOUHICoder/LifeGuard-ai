@@ -200,8 +200,14 @@ const App: React.FC = () => {
       // 3. Capture Audio Chunk
       let audioBase64: string | null = null;
       if (mediaRecorderRef.current?.state === 'recording') {
+        // Use a promise to wait for the stop event instead of a fixed timeout
+        const stopPromise = new Promise<void>((resolve) => {
+          if (!mediaRecorderRef.current) return resolve();
+          mediaRecorderRef.current.onstop = () => resolve();
+        });
+
         mediaRecorderRef.current.stop();
-        await new Promise((r) => setTimeout(r, 500));
+        await stopPromise;
 
         if (audioChunksRef.current.length === 0) {
           console.warn('No audio chunks collected');
@@ -240,14 +246,21 @@ const App: React.FC = () => {
         audioBase64,
         state.language
       );
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Analysis took too long (>30 seconds). Check internet connection and try again.')), 30000)
-      );
+      
+      let timeoutHandle: NodeJS.Timeout;
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timeoutHandle = setTimeout(() => reject(new Error('Analysis took too long (>30 seconds). Check internet connection and try again.')), 30000);
+      });
 
-      const instruction: EmergencyInstruction = await Promise.race([
-        analysisPromise,
-        timeoutPromise,
-      ]);
+      let instruction: EmergencyInstruction;
+      try {
+        instruction = await Promise.race([
+          analysisPromise,
+          timeoutPromise,
+        ]);
+      } finally {
+        clearTimeout(timeoutHandle!);
+      }
 
       // Validate response
       if (!instruction || !instruction.type) {
@@ -388,6 +401,7 @@ const App: React.FC = () => {
                             state.lastInstruction!.dangerLevel,
                           ...state.lastInstruction!.actions,
                           state.lastInstruction!.warning,
+                          (state.lastInstruction as any).reasoning,
                         ]
                           .filter(Boolean)
                           .join('. ');

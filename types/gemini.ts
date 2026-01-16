@@ -23,6 +23,7 @@ export interface EmergencyInstruction {
   dangerLevel: DangerLevel;
   actions: string[];
   warning?: string;
+  reason?: string;
 }
 
 export interface AppState {
