@@ -30,6 +30,7 @@ interface ExtendedInstruction extends EmergencyInstruction {
 }
 
 const App: React.FC = () => {
+  const [showSplash, setShowSplash] = useState(true);
   const [state, setState] = useState<AppState>({
     language: Language.ENGLISH,
     isEmergencyActive: false,
@@ -47,6 +48,14 @@ const App: React.FC = () => {
   // Retry count for failed analyses
   const retryCountRef = useRef<number>(0);
   const MAX_RETRIES = 3;
+
+  // Splash screen timer
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, []);
 
   // --- Speech Engine with error handling ---
   const speak = useCallback(
@@ -399,33 +408,66 @@ const App: React.FC = () => {
       }`}
       dir={isRTL ? "rtl" : "ltr"}
     >
+      {/* Splash Screen Animation */}
+      <AnimatePresence>
+        {showSplash && (
+          <motion.div
+            key="splash"
+            className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center"
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 8, opacity: 0 }}
+              transition={{ 
+                duration: 0.8,
+                ease: [0.43, 0.13, 0.23, 0.96]
+              }}
+              className="relative w-32 h-32 sm:w-40 sm:h-40 mb-4"
+            >
+              <img
+                src="/assets/logo.png"
+                alt="LifeGuard AI"
+                className="w-full h-full object-contain drop-shadow-[0_0_40px_rgba(239,68,68,0.6)]"
+              />
+            </motion.div>
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ delay: 0.3, duration: 0.5 }}
+              className="text-2xl font-bold text-white tracking-wider"
+            >
+              LifeGuard <span className="text-red-500">AI</span>
+            </motion.h1>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Header */}
-      <header className="sticky top-0 z-50 p-4 flex justify-between items-center bg-slate-900/80 backdrop-blur-md border-b border-slate-800">
+      <header className="sticky top-0 z-50 px-4 py-3 flex justify-between items-center bg-black/80 backdrop-blur-xl border-b border-slate-800/50">
         <div className="flex items-center gap-3">
-  {/* Logo */}
-  <div className="relative w-12 h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 flex-shrink-0">
-    <img
-      src="/assets/logo.png"
-      alt="LifeGuard AI Logo"
-      className="w-full h-full object-contain drop-shadow-[0_0_12px_rgba(255,80,80,0.35)]"
-    />
-  </div>
+          {/* Logo */}
+          <div className="relative w-10 h-10 sm:w-11 sm:h-11 flex-shrink-0">
+            <img
+              src="/assets/logo.png"
+              alt="LifeGuard AI Logo"
+              className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(239,68,68,0.4)]"
+            />
+          </div>
 
-  {/* Text */}
-  <div className="flex flex-col leading-tight">
-    {/* Brand name */}
-    <span className="font-extrabold text-xl md:text-2xl tracking-tight text-white">
-      LifeGuard{" "}
-      <span className="text-red-400">AI</span>
-    </span>
-
-    {/* Tagline */}
-    <span className="text-xs md:text-sm text-white/60 tracking-wide">
-      Intelligent Emergency Response
-    </span>
-  </div>
-</div>
-
+          {/* Text */}
+          <div className="flex flex-col justify-center">
+            <span className="font-bold text-lg sm:text-xl tracking-tight text-white leading-none">
+              LifeGuard <span className="text-red-500">AI</span>
+            </span>
+            <span className="text-[10px] sm:text-xs text-slate-400 font-medium tracking-wide hidden min-[360px]:block opacity-80">
+              Intelligent Emergency Response
+            </span>
+          </div>
+        </div>
 
         <LanguageSelector
           selectedLanguage={state.language}
