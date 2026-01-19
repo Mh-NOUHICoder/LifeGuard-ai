@@ -1,7 +1,7 @@
 {
   "name": "Lifeguard AI",
   "short_name": "LifeguardAI",
-  "description": "Lifeguard AI progressive web application",
+  "description": "LifeGuard AI is an intelligent emergency response app that analyzes real-time visuals and audio to deliver immediate, life-saving instructions.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -20,18 +20,8 @@
       "type": "image/png"
     },
     {
-      "src": "/icons/android/icon-128.png",
-      "sizes": "128x128",
-      "type": "image/png"
-    },
-    {
       "src": "/icons/android/icon-144.png",
       "sizes": "144x144",
-      "type": "image/png"
-    },
-    {
-      "src": "/icons/android/icon-152.png",
-      "sizes": "152x152",
       "type": "image/png"
     },
     {

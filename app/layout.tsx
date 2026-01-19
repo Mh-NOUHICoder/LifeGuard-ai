@@ -16,13 +16,13 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
+  themeColor: "#0f172a",
 };
 
 export const metadata: Metadata = {
   title: "LifeGuard AI - Emergency Response",
   description:
     "Real-time emergency response AI using Gemini API. Multimodal analysis with voice guidance in Arabic, French, and English.",
-  themeColor: "#0f172a",
   manifest: "/manifest.json",
   icons: {
     icon: [
@@ -50,7 +50,7 @@ export default function RootLayout({
           sizes="180x180"
           href="/icons/ios/apple-touch-icon.png"
         />
-        <meta name="theme-color" content="#0f172a" />
+        
         <meta name="msapplication-TileColor" content="#0f172a" />
         <meta
           name="msapplication-TileImage"
