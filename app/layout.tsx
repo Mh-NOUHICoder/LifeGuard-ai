@@ -1,14 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Rubik, Roboto_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const rubik = Rubik({
+  variable: "--font-rubik",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const robotoMono = Roboto_Mono({
+  variable: "--font-roboto-mono",
   subsets: ["latin"],
 });
 
@@ -16,7 +16,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#0f172a",
+  themeColor: "#000000",
 };
 
 export const metadata: Metadata = {
@@ -51,7 +51,10 @@ export default function RootLayout({
           href="/icons/ios/apple-touch-icon.png"
         />
         
-        <meta name="msapplication-TileColor" content="#0f172a" />
+        {/* iOS Splash Screen Fallback */}
+        <link rel="apple-touch-startup-image" href="/icons/android/icon-512.png" />
+
+        <meta name="msapplication-TileColor" content="#000000" />
         <meta
           name="msapplication-TileImage"
           content="/icons/windows/mstile-150x150.png"
@@ -62,7 +65,7 @@ export default function RootLayout({
           content="black-translucent"
         />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${rubik.variable} ${robotoMono.variable} antialiased`}>
         {children}
       </body>
     </html>

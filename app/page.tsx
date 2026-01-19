@@ -394,7 +394,7 @@ const App: React.FC = () => {
 
   return (
     <div
-      className={`min-h-screen bg-slate-950 text-slate-50 ${
+      className={`min-h-screen bg-black text-slate-50 ${
         isRTL ? "rtl" : "ltr"
       }`}
       dir={isRTL ? "rtl" : "ltr"}
@@ -532,7 +532,7 @@ const App: React.FC = () => {
       </AnimatePresence>
 
       {/* Debug Panel */}
-      <DebugPanel />
+      {/* <DebugPanel /> */}
     </div>
   );
 };
