@@ -152,3 +152,71 @@ export function sendNotification(
     new Notification(title, options);
   }
 }
+
+/**
+ * Get local emergency number based on timezone/locale
+ * Best-effort detection for US/CA (911), UK/IE (999), Morocco (150), EU (112)
+ * Fallback: 112
+ */
+export function getLocalEmergencyNumber(): string {
+  if (typeof window === 'undefined') return '112';
+
+  try {
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    const locale = (navigator.language || '').toLowerCase();
+
+    // Morocco
+    if (timeZone === 'Africa/Casablanca' || locale.endsWith('-ma')) {
+      return '150';
+    }
+
+    // UK & Ireland
+    if (
+      timeZone === 'Europe/London' || 
+      timeZone === 'Europe/Dublin' || 
+      timeZone === 'Europe/Belfast' ||
+      locale === 'en-gb' || 
+      locale === 'en-ie'
+    ) {
+      return '999';
+    }
+
+    // US & Canada
+    if (
+      locale === 'en-us' || 
+      locale === 'en-ca' || 
+      (timeZone.startsWith('America/') && (
+        timeZone.includes('New_York') || 
+        timeZone.includes('Chicago') || 
+        timeZone.includes('Denver') || 
+        timeZone.includes('Los_Angeles') || 
+        timeZone.includes('Phoenix') || 
+        timeZone.includes('Anchorage') || 
+        timeZone.includes('Honolulu') || 
+        timeZone.includes('Vancouver') || 
+        timeZone.includes('Toronto') ||
+        timeZone.includes('Montreal')
+      ))
+    ) {
+      return '911';
+    }
+
+    // Europe (General)
+    if (timeZone.startsWith('Europe/')) {
+      return '112';
+    }
+  } catch (e) {
+    console.warn('[LifeGuard] Failed to detect region for emergency number', e);
+  }
+
+  return '112';
+}
+
+/**
+ * Trigger native phone dialer
+ */
+export function triggerEmergencyDialer(number: string): void {
+  if (typeof window !== 'undefined') {
+    window.location.href = `tel:${number}`;
+  }
+}

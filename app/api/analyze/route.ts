@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
-import { getEmergencyPrompt } from "@/lib/prompt";
+import { getEmergencyPrompt, SYSTEM_PROMPT, buildContextPrompt } from "@/lib/prompt";
 
 interface AnalysisResponse {
   type: string;
@@ -52,10 +52,12 @@ export async function POST(request: NextRequest) {
     const ai = new GoogleGenAI({ apiKey });
     const langName = LANGUAGE_MAP[language as string] || 'English';
 
-    const prompt = getEmergencyPrompt(langName);
+    const contextPrompt = buildContextPrompt([], []); // Initialize with empty context for now
+    const decisionPrompt = getEmergencyPrompt(langName);
 
     const parts: any[] = [
-      { text: prompt },
+      { text: contextPrompt },
+      { text: decisionPrompt },
       {
         inlineData: {
           mimeType: "image/jpeg",
@@ -79,6 +81,7 @@ export async function POST(request: NextRequest) {
       contents: [{ parts }],
       config: {
         temperature: 0.1,
+        systemInstruction: SYSTEM_PROMPT,
       },
     });
 
