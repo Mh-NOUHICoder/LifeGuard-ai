@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShieldAlert, X } from "lucide-react";
+import { X } from "lucide-react";
 
 import {
   Language,

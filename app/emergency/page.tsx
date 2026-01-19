@@ -4,16 +4,22 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Camera, PhoneCall, ShieldAlert, Volume2, RefreshCw, Flame, Droplet, Info, X } from 'lucide-react';
 import { Language, EmergencyType, EmergencyInstruction } from '@/types/gemini';
+import { getLocalEmergencyNumber, triggerEmergencyDialer } from '@/lib/utils';
 
 export default function EmergencyPage() {
   const [lang, setLang] = useState<Language>(Language.ENGLISH);
   const [isActive, setIsActive] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<EmergencyInstruction | null>(null);
+  const [emergencyNumber, setEmergencyNumber] = useState('112');
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+
+  useEffect(() => {
+    setEmergencyNumber(getLocalEmergencyNumber());
+  }, []);
 
   // Speech function
   const speak = (text: string) => {
@@ -134,8 +140,8 @@ export default function EmergencyPage() {
           </AnimatePresence>
 
           <div className="grid grid-cols-2 gap-4">
-            <button onClick={() => window.open('tel:911')} className="bg-white text-black py-5 rounded-2xl font-black flex items-center justify-center gap-2">
-              <PhoneCall /> CALL 911
+            <button onClick={() => triggerEmergencyDialer(emergencyNumber)} className="bg-white text-black py-5 rounded-2xl font-black flex items-center justify-center gap-2">
+              <PhoneCall /> CALL {emergencyNumber}
             </button>
             <button onClick={handleAnalyze} disabled={isAnalyzing} className="bg-blue-600 py-5 rounded-2xl font-black flex items-center justify-center gap-2">
               <Camera /> {isAnalyzing ? '...' : 'ANALYZE'}
