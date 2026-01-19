@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Rubik, Roboto_Mono } from "next/font/google";
 import "./globals.css";
+import SWRegistration from "./SWRegistration";
 
 const rubik = Rubik({
   variable: "--font-rubik",
@@ -66,6 +67,7 @@ export default function RootLayout({
         />
       </head>
       <body className={`${rubik.variable} ${robotoMono.variable} antialiased`}>
+        <SWRegistration />
         {children}
       </body>
     </html>
