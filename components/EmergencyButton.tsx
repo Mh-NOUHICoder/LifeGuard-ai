@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Fingerprint } from 'lucide-react';
+import { Siren } from 'lucide-react';
 import { motion, useAnimation } from 'framer-motion';
 import { Language } from '@/types/gemini';
 import { t } from '@/lib/translations';
@@ -128,7 +128,7 @@ export default function EmergencyButton({
             }
           `}
         >
-          <Fingerprint
+          <Siren
             className={`w-16 h-16 mb-2 transition-all ${
               isPressing ? 'text-white scale-110' : 'text-red-500'
             }`}

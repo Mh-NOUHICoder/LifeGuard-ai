@@ -21,7 +21,6 @@ import EmergencyButton from "@/components/EmergencyButton";
 import CameraCapture from "@/components/CameraCapture";
 import DangerAlert from "@/components/DangerAlert";
 import LanguageSelector from "@/components/LanguageSelector";
-import ErrorToast from "@/components/ErrorToast";
 import DebugPanel from "@/components/DebugPanel";
 
 // Extended interface to support reasoning until types/gemini is updated
@@ -217,13 +216,20 @@ const App: React.FC = () => {
 
       // 2. Capture Image with validation
       const canvas = canvasRef.current;
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
+      
+      // Resize image to max 800px width to reduce payload size and latency
+      const MAX_WIDTH = 800;
+      const scale = Math.min(1, MAX_WIDTH / video.videoWidth);
+      const width = video.videoWidth * scale;
+      const height = video.videoHeight * scale;
+
+      canvas.width = width;
+      canvas.height = height;
       const ctx = canvas.getContext("2d");
       if (!ctx) {
         throw new Error("Failed to get canvas context");
       }
-      ctx.drawImage(video, 0, 0);
+      ctx.drawImage(video, 0, 0, width, height);
       const imageDataUrl = canvas.toDataURL("image/jpeg", 0.85);
       if (!imageDataUrl || imageDataUrl === "data:,") {
         throw new Error("Failed to capture image from camera");
@@ -280,7 +286,10 @@ const App: React.FC = () => {
         }
 
         audioChunksRef.current = [];
-        mediaRecorderRef.current.start();
+        // Restart recorder. After `stop()` and the `onstop` event, the state is 'inactive'.
+        // TypeScript can't follow this state change, so we call start() directly.
+        // Optional chaining handles if the ref becomes null during an async operation.
+        mediaRecorderRef.current?.start();
       } else {
         console.warn("MediaRecorder not in recording state");
       }
@@ -514,7 +523,6 @@ const App: React.FC = () => {
                           "Danger level: " + state.lastInstruction!.dangerLevel,
                           ...state.lastInstruction!.actions,
                           state.lastInstruction!.warning,
-                          (state.lastInstruction as any).reasoning,
                           (state.lastInstruction as ExtendedInstruction)
                             .reasoning,
                         ]

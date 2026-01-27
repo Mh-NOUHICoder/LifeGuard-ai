@@ -18,8 +18,11 @@ export default function EmergencyPage() {
   const audioChunksRef = useRef<Blob[]>([]);
 
   useEffect(() => {
-    setEmergencyNumber(getLocalEmergencyNumber());
+    const num = getLocalEmergencyNumber();
+    console.log('Detected emergency number:', num);
+    setEmergencyNumber(num);
   }, []);
+
 
   // Speech function
   const speak = (text: string) => {
@@ -141,7 +144,7 @@ export default function EmergencyPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <button onClick={() => triggerEmergencyDialer(emergencyNumber)} className="bg-white text-black py-5 rounded-2xl font-black flex items-center justify-center gap-2">
-              <PhoneCall /> CALL {emergencyNumber}
+              <PhoneCall /> CALL! {emergencyNumber}
             </button>
             <button onClick={handleAnalyze} disabled={isAnalyzing} className="bg-blue-600 py-5 rounded-2xl font-black flex items-center justify-center gap-2">
               <Camera /> {isAnalyzing ? '...' : 'ANALYZE'}

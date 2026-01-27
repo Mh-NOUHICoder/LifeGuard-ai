@@ -165,39 +165,46 @@ export function getLocalEmergencyNumber(): string {
     const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
     const locale = (navigator.language || '').toLowerCase();
 
-    // Morocco
-    if (timeZone === 'Africa/Casablanca' || locale.endsWith('-ma')) {
-      return '150';
-    }
+    // Australia (000)
+    if (timeZone.startsWith('Australia/')) return '000';
 
-    // UK & Ireland
+    // New Zealand (111)
+    if (timeZone.startsWith('Pacific/Auckland') || timeZone.startsWith('Pacific/Chatham')) return '111';
+
+    // UK & Ireland (999)
     if (
       timeZone === 'Europe/London' || 
       timeZone === 'Europe/Dublin' || 
       timeZone === 'Europe/Belfast' ||
+      timeZone === 'Europe/Jersey' ||
+      timeZone === 'Europe/Guernsey' ||
+      timeZone === 'Europe/Isle_of_Man' ||
       locale === 'en-gb' || 
       locale === 'en-ie'
     ) {
       return '999';
     }
 
-    // US & Canada
-    if (
-      locale === 'en-us' || 
-      locale === 'en-ca' || 
-      (timeZone.startsWith('America/') && (
-        timeZone.includes('New_York') || 
-        timeZone.includes('Chicago') || 
-        timeZone.includes('Denver') || 
-        timeZone.includes('Los_Angeles') || 
-        timeZone.includes('Phoenix') || 
-        timeZone.includes('Anchorage') || 
-        timeZone.includes('Honolulu') || 
-        timeZone.includes('Vancouver') || 
-        timeZone.includes('Toronto') ||
-        timeZone.includes('Montreal')
-      ))
-    ) {
+    // Brazil (190)
+    if (timeZone.includes('Sao_Paulo') || timeZone.includes('Rio_Branco') || timeZone.includes('Belem') || timeZone.includes('Fortaleza') || timeZone.includes('Manaus') || timeZone.includes('Recife') || timeZone.includes('Araguaina') || timeZone.includes('Maceio') || timeZone.includes('Bahia') || timeZone.includes('Cuiaba') || timeZone.includes('Campo_Grande') || timeZone.includes('Porto_Velho') || timeZone.includes('Boa_Vista') || timeZone.includes('Noronha') || timeZone.includes('Eirunepe') || timeZone.includes('Santarem')) {
+      return '190';
+    }
+
+    // Morocco (150)
+    if (timeZone === 'Africa/Casablanca' || locale.endsWith('-ma')) {
+      return '150';
+    }
+
+    // Asia Specifics
+    if (timeZone.startsWith('Asia/')) {
+      if (timeZone.includes('Tokyo')) return '110'; // Japan
+      if (timeZone.includes('Hong_Kong') || timeZone.includes('Singapore')) return '999';
+      // India, South Korea, etc use 112
+    }
+
+    // North & South America (911) - Catch-all for America/ zones (US, Canada, Mexico, etc)
+    // This covers all US timezones (Detroit, Boise, etc) that were missed before
+    if (timeZone.startsWith('America/') || timeZone.startsWith('US/') || timeZone.startsWith('Canada/') || locale === 'en-us' || locale === 'en-ca') {
       return '911';
     }
 

@@ -88,12 +88,15 @@ export async function POST(request: NextRequest) {
     const text = response.text || "{}";
 
     // Parse JSON with robust extraction
+    // Clean up markdown code blocks if present
+    const cleanText = text.replace(/```json/g, '').replace(/```/g, '');
+
     let parsed: AnalysisResponse;
     try {
-      parsed = JSON.parse(text) as AnalysisResponse;
+      parsed = JSON.parse(cleanText) as AnalysisResponse;
     } catch (e) {
       // Extract JSON from response even if surrounded by text
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         try {
           parsed = JSON.parse(jsonMatch[0]) as AnalysisResponse;

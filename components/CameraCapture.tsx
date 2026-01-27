@@ -1,9 +1,10 @@
 'use client';
 
-import React, { RefObject } from 'react';
-import { Camera, X, SwitchCamera } from 'lucide-react';
+import React, { RefObject, useState, useEffect } from 'react';
+import { Camera, X, SwitchCamera, Phone, Loader2, Circle } from 'lucide-react';
 import { Language } from '@/types/gemini';
 import { t } from '@/lib/translations';
+import { getLocalEmergencyNumber, triggerEmergencyDialer } from '@/lib/utils';
 
 interface CameraCaptureProps {
   videoRef: RefObject<HTMLVideoElement | null>;
@@ -22,6 +23,26 @@ export default function CameraCapture({
   onStop,
   onFlipCamera,
 }: CameraCaptureProps) {
+  const [emergencyNumber, setEmergencyNumber] = useState('112');
+  const [countdown, setCountdown] = useState(5);
+
+  useEffect(() => {
+    setEmergencyNumber(getLocalEmergencyNumber());
+  }, []);
+
+  useEffect(() => {
+    if (isAnalyzing) {
+      setCountdown(5); // Reset timer when analysis starts
+      const timer = setInterval(() => {
+        setCountdown(prevCountdown =>
+          prevCountdown > 0 ? prevCountdown - 1 : 0
+        );
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [isAnalyzing]);
+
   return (
     <div className="space-y-6">
       {/* Camera Feed */}
@@ -40,11 +61,15 @@ export default function CameraCapture({
             <span className="font-bold text-blue-400 tracking-widest animate-pulse">
               {t(language, 'app.analyzing')}
             </span>
+            <span className="font-mono text-sm text-blue-300 mt-2">
+              {countdown > 0 ? `${countdown} seconds...` : 'Processing...'}
+            </span>
           </div>
         )}
 
-        <div className="absolute top-4 right-4 px-3 py-1 bg-red-600 text-[10px] font-bold rounded-full animate-pulse">
-          {t(language, 'app.recording')} ●
+        <div className="absolute top-4 right-4 px-3 py-1 bg-red-600 text-[10px] font-bold rounded-full animate-pulse flex items-center gap-1">
+          {t(language, 'app.recording')}{' '}
+          <Circle className="w-2 h-2 fill-white" />
         </div>
 
         {/* Flip Camera Button */}
@@ -60,10 +85,11 @@ export default function CameraCapture({
       {/* Control Buttons */}
       <div className="flex gap-2 sm:gap-4 flex-wrap">
         <button
-          onClick={() => window.open('tel:911')}
+          onClick={() => triggerEmergencyDialer(emergencyNumber)}
           className="flex-1 min-w-max bg-white text-black h-14 sm:h-16 rounded-2xl font-black text-sm sm:text-base flex items-center justify-center gap-2 hover:bg-slate-200 transition-colors shadow-lg"
         >
-          {t(language, 'app.callEmergency')}
+          <Phone className="w-5 h-5" />
+          {t(language, 'app.callEmergency')} ({emergencyNumber})
         </button>
         <button
           onClick={onStop}
@@ -88,7 +114,7 @@ export default function CameraCapture({
             <Camera className={isAnalyzing ? 'animate-pulse' : ''} />
             {isAnalyzing ? (
               <>
-                <span className="animate-spin inline-block mr-1">⏳</span>
+                <Loader2 className="animate-spin" />
                 {t(language, 'app.processing')}
               </>
             ) : (
