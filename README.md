@@ -423,12 +423,3 @@ MIT License – Safe for personal & commercial use
 
 ```
 
----
-
-✅ **Next step:**  
-
-If you want, I can also **create a downloadable `README.md` file** with this exact content so you can just **drop it into your `lifeguard-ai/` folder** without copy-pasting manually.  
-
-Do you want me to do that?
-::contentReference[oaicite:0]{index=0}
-```
