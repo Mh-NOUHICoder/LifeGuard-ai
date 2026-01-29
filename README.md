@@ -203,5 +203,3 @@ MIT License – Safe for personal & commercial use
 
 **Save lives. Every second counts. 🚨**
 
-```
-
