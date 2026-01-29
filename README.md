@@ -1,211 +1,223 @@
-# LifeGuard AI 🚨
+Perfect! Based on your **final project structure**, I’ve created a **complete, professional, hackathon-ready `README.md`** that reflects all folders, files, and features. You can **download it or copy-paste directly** into your project folder (`lifeguard-ai/README.md`).
 
-Real-time emergency response application powered by **Gemini API**. Analyzes images and audio to provide immediate, multilingual instructions for emergency situations.
+Here’s the full Markdown content:
+
+---
+
+````markdown
+<p align="center">
+  <img src="./public/assets/logo.png" alt="LifeGuard AI Logo" width="200"/>
+</p>
+
+<h1 align="center">🚨 LifeGuard AI 🚨</h1>
+<p align="center">
+  Real-time emergency response powered by <strong>Google Gemini AI</strong><br/>
+  Turn your smartphone into a life-saving assistant
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Status-Active-brightgreen?style=for-the-badge" alt="status"/>
+  <img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="license"/>
+  <img src="https://img.shields.io/badge/Node.js-v18+-green?style=for-the-badge" alt="node"/>
+  <img src="https://img.shields.io/badge/Version-1.0.0-blueviolet?style=for-the-badge" alt="version"/>
+</p>
+
+---
+
+## 🎬 Demo
+
+<p align="center">
+  <img src="./public/assets/demo.gif" alt="LifeGuard AI Demo" width="600"/>
+</p>
+
+---
 
 ## 🎯 Features
 
-- **Real-time Analysis**: Instant emergency detection using Gemini's multimodal AI
-- **Multilingual Support**: Arabic, French, and English
-- **Voice Guidance**: Text-to-speech instructions in your language
-- **Mobile Optimized**: Works on phones and tablets
-- **Fast & Reliable**: Optimized for low-latency responses in critical moments
-- **Smart Retry**: Automatic retry mechanism for robust analysis
+- **Real-time Analysis**: Instant emergency detection using Gemini's multimodal AI  
+- **Multilingual Support**: Arabic, French, and English  
+- **Voice Guidance**: Text-to-speech instructions in your language  
+- **Mobile Optimized**: Works on phones and tablets  
+- **Fast & Reliable**: Optimized for low-latency responses in critical moments  
+- **Smart Retry**: Automatic retry mechanism for robust analysis  
+
+---
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- Node.js 18+
-- Gemini API Key (get from [Google AI Studio](https://aistudio.google.com))
+- Node.js 18+  
+- Gemini API Key (get from [Google AI Studio](https://aistudio.google.com))  
 
 ### Installation
 
 1. **Clone & Install**
 ```bash
+git clone https://github.com/Mh-NOUHICoder/lifeguard-ai
 cd lifeguard-ai
 npm install
-```
+````
 
 2. **Configure Environment**
+
 ```bash
 # Create .env.local
 echo "API_KEY=your_gemini_api_key_here" > .env.local
 ```
 
 3. **Run Development Server**
+
 ```bash
 npm run dev
 ```
 
 4. **Open in Browser**
+
 ```
 http://localhost:3000
 ```
 
-## 📋 Emergency Types Detected
-
-| Type | Trigger | Response |
-|------|---------|----------|
-| **Severe Bleeding** | Heavy bleeding, deep wounds, blood loss | Direct pressure, elevation, emergency call |
-| **Fire/Smoke** | Flames, fire, smoke | Evacuation, stop drop roll, emergency call |
-| **Not Emergency** | Normal scene | No action needed |
+---
 
 ## 🏗️ Project Structure
 
 ```
 lifeguard-ai/
-├── app/
-│   ├── page.tsx              # Main emergency interface
-│   ├── emergency/page.tsx    # Legacy emergency page
-│   ├── api/analyze/route.ts  # Gemini API endpoint
-│   └── layout.tsx            # App layout
-├── components/               # Reusable UI components
-│   ├── CameraCapture.tsx     # Video feed & analysis UI
-│   ├── DangerAlert.tsx       # Emergency instructions display
-│   ├── EmergencyButton.tsx   # Start button
-│   ├── ErrorToast.tsx        # Error notifications
-│   └── LanguageSelector.tsx  # Language switcher
-├── lib/
-│   ├── gemini.ts            # Gemini API integration
-│   ├── tts.ts               # Text-to-speech utilities
-│   └── prompt.ts            # AI prompts
-├── types/gemini.ts          # TypeScript types
-└── package.json
+├── app/                        # The "Brain" of the Application
+│   ├── api/
+│   │   ├── analyze/route.ts    # Core AI analysis engine
+│   │   └── test-gemini/        # Dev testing for AI
+│   ├── emergency/page.tsx      # Specialized emergency interface
+│   ├── globals.css             # Global styling and colors
+│   ├── layout.tsx              # Main wrapper for the app
+│   └── page.tsx                # Landing page & entry point
+├── components/                 # The "Body" (UI Elements)
+│   ├── CameraCapture.tsx       # Live camera & audio
+│   ├── DangerAlert.tsx         # High-risk visual alerts
+│   ├── EmergencyButton.tsx     # Push for help button
+│   ├── LanguageSelector.tsx    # Multilingual toggle
+│   └── DebugPanel.tsx          # Developer AI monitoring
+├── lib/                        # The "Nervous System" (Core Logic)
+│   ├── gemini.ts               # Bridge to Google Gemini AI
+│   ├── prompt.ts               # AI reasoning logic
+│   ├── tts.ts                  # Text-to-Speech engine
+│   ├── translations.ts         # Multi-language dictionary
+│   └── permissions.ts          # Camera/microphone access
+├── public/                     # The "Visuals"
+│   ├── assets/                 # Logos and graphics
+│   ├── icons/                  # Mobile app icons
+│   ├── manifest.json           # Makes app installable (PWA)
+│   └── sw.js                   # Service worker
+├── types/                      # Code "Definitions"
+│   └── gemini.ts               # AI response types
+└── README.md                   # Full documentation
 ```
 
-## 🔑 API Configuration
+---
 
-### Gemini Model
-- **Current**: `gemini-2.0-flash-001`
-- **Capabilities**: Vision, Audio, Multimodal reasoning
+## 📋 Emergency Types Detected
 
-### Environment Variables
-```
-API_KEY=your_gemini_api_key
-```
+| Type                | Trigger                                 | Response                                   |
+| ------------------- | --------------------------------------- | ------------------------------------------ |
+| **Severe Bleeding** | Heavy bleeding, deep wounds, blood loss | Direct pressure, elevation, emergency call |
+| **Fire/Smoke**      | Flames, fire, smoke                     | Evacuate, stop-drop-roll, call emergency   |
+| **Not Emergency**   | Normal scene                            | No action needed                           |
+
+---
 
 ## 📱 UX Flow
 
-1. **Select Language** (AR/FR/EN)
-2. **Press Emergency Button** (large red button)
-3. **Allow Camera/Microphone** (browser permission)
-4. **Tap "ANALYZE SCENE"** to capture image & audio
-5. **Receive Instructions** (displayed & spoken)
-6. **Call Emergency Services** (optional button)
+1. Select Language (AR / FR / EN)
+2. Press Emergency Button (large red)
+3. Allow Camera & Microphone access
+4. Tap "ANALYZE SCENE" to capture image & audio
+5. Receive instructions (displayed & spoken)
+6. Optional: Call emergency services
 
-## 🛠️ Development
-
-### Build
-```bash
-npm run build
-```
-
-### Production
-```bash
-npm start
-```
-
-### Lint
-```bash
-npm run lint
-```
-
-## 📊 Component Details
-
-### `CameraCapture`
-- Manages video feed display
-- Handles analysis UI state
-- Shows recording indicator
-- Floating analyze button
-
-### `DangerAlert`
-- Displays emergency type
-- Shows danger level (CRITICAL/HIGH/MODERATE/LOW)
-- Lists 1-3 immediate actions
-- Provides replay audio button
-- Shows critical warnings
-
-### `LanguageSelector`
-- Real-time language switching
-- RTL support for Arabic
-- Visual language indicator
+---
 
 ## 🔊 Text-to-Speech
 
 Supports natural speech in:
-- **Arabic** (ar-SA) - Right-to-left
-- **French** (fr-FR)
-- **English** (en-US)
 
-#### Advanced Features
+* **Arabic (ar-SA)** – Right-to-left
+* **French (fr-FR)**
+* **English (en-US)**
+
 ```typescript
 import { speak, stopSpeech } from '@/lib/tts';
 
-// Speak with custom options
 await speak("Emergency instruction", Language.ARABIC, {
-  rate: 1.2,      // 1.2x speed
+  rate: 1.2,
   pitch: 1,
   volume: 1
 });
 
-// Stop ongoing speech
 stopSpeech();
 ```
+
+---
 
 ## 🚀 Deployment
 
 ### Vercel (Recommended)
+
 ```bash
 vercel deploy
 ```
 
 ### Docker
+
 ```bash
 docker build -t lifeguard-ai .
 docker run -p 3000:3000 lifeguard-ai
 ```
 
+---
+
 ## 🔒 Security
 
-- ✅ API key stored in `.env.local` (never committed)
-- ✅ No data logging of emergency scenes
-- ✅ Client-side audio/video processing
-- ✅ HTTPS required for camera access
+* API key in `.env.local` (never committed)
+* No data logging of emergency scenes
+* Client-side camera/audio processing only
+* HTTPS required
 
-## 📈 Performance
-
-- **Analysis Time**: ~2-5 seconds
-- **Retry Logic**: 3 automatic retries on failure
-- **Timeout**: 30 seconds max per analysis
-- **Image Quality**: 85% JPEG compression
-
-## ⚠️ Important Notes
-
-- **Not a replacement for emergency services** - Always call 911/emergency services
-- **Requires working microphone & camera**
-- **Internet connection required** for Gemini API
-- **Browser permissions** must be granted
-- **Test thoroughly** before critical use
+---
 
 ## 🤝 Contributing
-
-To improve LifeGuard AI:
 
 1. Test edge cases
 2. Report bugs with screenshots
 3. Suggest UX improvements
-4. Add support for more languages
+4. Add more language support
+
+---
 
 ## 📄 License
 
-MIT License - Safe for personal and commercial use
+MIT License – Safe for personal & commercial use
+
+---
 
 ## 🆘 Support
 
-- **Issues?** Check browser console for errors
-- **No camera?** Grant permissions in browser settings
-- **API errors?** Verify your Gemini API key is valid
+* Issues? Check browser console
+* No camera? Grant browser permissions
+* API errors? Verify Gemini API key
 
 ---
 
 **Save lives. Every second counts. 🚨**
+
+```
+
+---
+
+✅ **Next step:**  
+
+If you want, I can also **create a downloadable `README.md` file** with this exact content so you can just **drop it into your `lifeguard-ai/` folder** without copy-pasting manually.  
+
+Do you want me to do that?
+::contentReference[oaicite:0]{index=0}
+```
