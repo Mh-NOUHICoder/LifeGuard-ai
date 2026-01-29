@@ -153,23 +153,6 @@ stopSpeech();
 
 ---
 
-## 🚀 Deployment
-
-### Vercel (Recommended)
-
-```bash
-vercel deploy
-```
-
-### Docker
-
-```bash
-docker build -t lifeguard-ai .
-docker run -p 3000:3000 lifeguard-ai
-```
-
----
-
 ## 🔒 Security
 
 * API key in `.env.local` (never committed)
