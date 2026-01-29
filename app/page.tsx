@@ -3,17 +3,16 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
+import Image from "next/image";
 
 import {
   Language,
   AppState,
-  EmergencyType,
   EmergencyInstruction,
 } from "@/types/gemini";
 import { analyzeEmergency } from "@/lib/gemini";
 import { speak as textToSpeech, stopSpeech } from "@/lib/tts";
 import {
-  requestMediaPermissions,
   requestMediaPermissionsWithFacing,
   isSecureContext,
 } from "@/lib/permissions";
@@ -21,7 +20,6 @@ import EmergencyButton from "@/components/EmergencyButton";
 import CameraCapture from "@/components/CameraCapture";
 import DangerAlert from "@/components/DangerAlert";
 import LanguageSelector from "@/components/LanguageSelector";
-import DebugPanel from "@/components/DebugPanel";
 
 // Extended interface to support reasoning until types/gemini is updated
 interface ExtendedInstruction extends EmergencyInstruction {
@@ -436,10 +434,12 @@ const App: React.FC = () => {
               }}
               className="relative w-32 h-32 sm:w-40 sm:h-40 mb-4"
             >
-              <img
+              <Image
                 src="/assets/logo.png"
                 alt="LifeGuard AI"
-                className="w-full h-full object-contain drop-shadow-[0_0_40px_rgba(239,68,68,0.6)]"
+                fill
+                className="object-contain drop-shadow-[0_0_40px_rgba(239,68,68,0.6)]"
+                priority
               />
             </motion.div>
             <motion.h1
@@ -460,10 +460,11 @@ const App: React.FC = () => {
         <div className="flex items-center gap-3">
           {/* Logo */}
           <div className="relative w-10 h-10 sm:w-11 sm:h-11 flex-shrink-0">
-            <img
+            <Image
               src="/assets/logo.png"
               alt="LifeGuard AI Logo"
-              className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(239,68,68,0.4)]"
+              fill
+              className="object-contain drop-shadow-[0_0_15px_rgba(239,68,68,0.4)]"
             />
           </div>
 

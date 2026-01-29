@@ -18,6 +18,14 @@ const LANGUAGE_MAP: Record<string, string> = {
   'French': 'French (Français)'
 };
 
+interface Part {
+  text?: string;
+  inlineData?: {
+    mimeType: "image/jpeg" | "audio/webm";
+    data: string;
+  };
+}
+
 const MODEL_NAME = "gemini-3-flash-preview";
 
 export async function POST(request: NextRequest) {
@@ -36,7 +44,7 @@ export async function POST(request: NextRequest) {
     let body;
     try {
       body = await request.json();
-    } catch (e) {
+    } catch {
       return NextResponse.json({ success: false, error: "Invalid JSON body" }, { status: 400 });
     }
 
@@ -55,7 +63,7 @@ export async function POST(request: NextRequest) {
     const contextPrompt = buildContextPrompt([], []); // Initialize with empty context for now
     const decisionPrompt = getEmergencyPrompt(langName);
 
-    const parts: any[] = [
+    const parts: Part[] = [
       { text: contextPrompt },
       { text: decisionPrompt },
       {
@@ -94,7 +102,7 @@ export async function POST(request: NextRequest) {
     let parsed: AnalysisResponse;
     try {
       parsed = JSON.parse(cleanText) as AnalysisResponse;
-    } catch (e) {
+    } catch {
       // Extract JSON from response even if surrounded by text
       const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
@@ -135,7 +143,7 @@ export async function POST(request: NextRequest) {
       : 'MODERATE';
 
     return NextResponse.json({ success: true, data: parsed });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[Analyze API] Error:", error);
     return NextResponse.json(
       {

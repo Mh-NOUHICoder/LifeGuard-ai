@@ -1,4 +1,6 @@
-const withPWA = require('next-pwa')({
+import withPWA from 'next-pwa';
+
+const pwa = withPWA({
   dest: 'public',
   register: true,
   skipWaiting: true,
@@ -9,4 +11,4 @@ const nextConfig = {
   turbopack: {},
 };
 
-module.exports = withPWA(nextConfig);
+export default pwa(nextConfig);

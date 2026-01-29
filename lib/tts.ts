@@ -6,8 +6,6 @@ interface TTSOptions {
   volume?: number;
 }
 
-let voicesLoaded = false;
-
 /**
  * Ensure voices are loaded before speaking.
  * Includes a trigger mechanism to force browser to load voices.
@@ -23,14 +21,12 @@ function ensureVoicesLoaded(): Promise<void> {
 
     // If voices are already available, proceed
     if (voices.length > 0) {
-      voicesLoaded = true;
       resolve();
       return;
     }
 
     // Handler for when voices update
     const onVoicesChanged = () => {
-      voicesLoaded = true;
       window.speechSynthesis.removeEventListener('voiceschanged', onVoicesChanged);
       resolve();
     };

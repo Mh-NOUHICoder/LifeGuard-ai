@@ -5,7 +5,7 @@
 // Extend Window type for gtag
 declare global {
   interface Window {
-    gtag?: (...args: any[]) => void;
+    gtag?: (...args: unknown[]) => void;
   }
 }
 
@@ -89,7 +89,7 @@ export function validateEmergencyResponse(data: unknown): boolean {
 /**
  * Debounce function for repeated calls
  */
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => void>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
@@ -111,7 +111,7 @@ export function debounce<T extends (...args: any[]) => any>(
  */
 export function logEmergencyEvent(
   eventType: 'start' | 'analyze' | 'success' | 'error',
-  data?: Record<string, any>
+  data?: Record<string, unknown>
 ): void {
   const timestamp = getTimestamp();
   const logEntry = {

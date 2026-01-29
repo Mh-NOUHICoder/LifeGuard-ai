@@ -2,8 +2,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Camera, PhoneCall, ShieldAlert, Volume2, RefreshCw, Flame, Droplet, Info, X } from 'lucide-react';
-import { Language, EmergencyType, EmergencyInstruction } from '@/types/gemini';
+import { Camera, PhoneCall, ShieldAlert, RefreshCw, Flame, Droplet } from 'lucide-react';
+import { Language, EmergencyInstruction } from '@/types/gemini';
 import { getLocalEmergencyNumber, triggerEmergencyDialer } from '@/lib/utils';
 
 export default function EmergencyPage() {
@@ -125,7 +125,7 @@ export default function EmergencyPage() {
             {result && (
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-zinc-900 p-6 rounded-3xl border border-red-900/50">
                 <div className="flex items-center gap-3 mb-4">
-                  {result.type === EmergencyType.FIRE ? <Flame className="text-orange-500" /> : <Droplet className="text-red-500" />}
+                  {result.type === 'Fire or Smoke' ? <Flame className="text-orange-500" /> : <Droplet className="text-red-500" />}
                   <h2 className="text-xl font-bold uppercase">{result.type.replace('_', ' ')}</h2>
                 </div>
                 

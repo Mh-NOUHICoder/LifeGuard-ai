@@ -33,11 +33,11 @@ export async function GET() {
       text: response.text,
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
       {
         success: false,
-        error: error.message,
+        error: error instanceof Error ? error.message : "An unknown error occurred",
       },
       { status: 500 }
     );

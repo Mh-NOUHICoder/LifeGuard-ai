@@ -1,6 +1,6 @@
 'use client';
 
-import React, { RefObject, useState, useEffect } from 'react';
+import React, { RefObject, useState, useEffect, useReducer } from 'react';
 import { Camera, X, SwitchCamera, Phone, Loader2, Circle } from 'lucide-react';
 import { Language } from '@/types/gemini';
 import { t } from '@/lib/translations';
@@ -15,6 +15,17 @@ interface CameraCaptureProps {
   onFlipCamera: () => void;
 }
 
+const countdownReducer = (state: number, action: { type: 'TICK' | 'RESET' }) => {
+  switch (action.type) {
+    case 'TICK':
+      return state > 0 ? state - 1 : 0;
+    case 'RESET':
+      return 5;
+    default:
+      return state;
+  }
+};
+
 export default function CameraCapture({
   videoRef,
   isAnalyzing,
@@ -23,24 +34,22 @@ export default function CameraCapture({
   onStop,
   onFlipCamera,
 }: CameraCaptureProps) {
-  const [emergencyNumber, setEmergencyNumber] = useState('112');
-  const [countdown, setCountdown] = useState(5);
+  const [emergencyNumber, setEmergencyNumber] = useState(getLocalEmergencyNumber());
+  const [countdown, dispatch] = useReducer(countdownReducer, 5);
 
   useEffect(() => {
-    setEmergencyNumber(getLocalEmergencyNumber());
-  }, []);
-
-  useEffect(() => {
+    let timer: NodeJS.Timeout | undefined;
     if (isAnalyzing) {
-      setCountdown(5); // Reset timer when analysis starts
-      const timer = setInterval(() => {
-        setCountdown(prevCountdown =>
-          prevCountdown > 0 ? prevCountdown - 1 : 0
-        );
+      dispatch({ type: 'RESET' });
+      timer = setInterval(() => {
+        dispatch({ type: 'TICK' });
       }, 1000);
-
-      return () => clearInterval(timer);
     }
+    return () => {
+      if (timer) {
+        clearInterval(timer);
+      }
+    };
   }, [isAnalyzing]);
 
   return (
