@@ -210,8 +210,6 @@ MIT License – Safe for personal & commercial use
 - **Scalability**: Mobile-first approach for global accessibility
 
 ---
-
----
 ## Gemini 3 Integration
 
 **LifeGuard AI** leverages **Google Gemini 3** to provide real-time emergency response directly on smartphones. The application uses Gemini 3’s **advanced multimodal analysis** capabilities to process both visual and audio input simultaneously, allowing the system to detect critical situations instantly. When a user triggers an emergency alert, the app streams images and audio to Gemini 3, which analyzes the scene in **under two seconds** and identifies potential hazards such as injuries, bleeding, or environmental threats.
@@ -221,7 +219,6 @@ To ensure accessibility and global usability, LifeGuard AI integrates **Gemini 3
 Gemini 3’s **low-latency reasoning** is central to the application’s performance, enabling immediate detection and response without delay. The app also implements a **smart retry mechanism**, leveraging Gemini 3’s robust API to maintain reliability even under unstable network conditions.
 
 By combining **multimodal AI, real-time analysis, and multilingual support**, LifeGuard AI transforms smartphones into life-saving assistants, making Gemini 3 the **core engine** behind its emergency detection, decision-making, and user guidance capabilities. This integration demonstrates the unique potential of Gemini 3 for **social good**, delivering impactful and innovative solutions in critical situations.
----
 
 --- 
 
