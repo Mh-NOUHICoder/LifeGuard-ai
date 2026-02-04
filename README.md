@@ -19,9 +19,22 @@
 ---
 ## 🎬 Demo
 
-<p align="center">
-  <img src="./public/assets/demo.gif" alt="LifeGuard AI Demo" width="600"/>
-</p>
+Watch the full real-world demo here:  
+ https://youtu.be/IP3uPmq0FO8
+
+---
+
+## 🥇 Why LifeGuard AI Stands Out
+
+Unlike static first-aid apps or pre-recorded videos, LifeGuard AI provides **real-time, AI-powered emergency assistance** based on what the camera and microphone actually detect.
+
+- Adapts instructions dynamically to the live situation
+- Combines vision, audio, and language understanding
+- Works instantly on any smartphone browser
+- Provides multilingual, voice-guided assistance
+- Designed for the critical first minutes before professionals arrive
+
+LifeGuard AI is not just an information app — it is an **active AI emergency assistant**.
 
 ---
 ## 🏆 Gemini 3 Hackathon Alignment
@@ -29,6 +42,29 @@
 - **Technical Excellence**: Sophisticated multimodal AI integration
 - **Real-world Impact**: Addresses urgent public safety needs
 - **Scalability**: Mobile-first approach for global accessibility
+
+---
+
+## 🧠 System Architecture
+
+LifeGuard AI is built as a real-time, low-latency emergency response system:
+
+Camera & Microphone  
+↓  
+Next.js PWA Client (Mobile Browser)  
+↓  
+API Route (`/api/analyze`)  
+↓  
+Gemini 3 Multimodal Analysis (Vision + Audio + Language)  
+↓  
+Decision Engine (`lib/prompt.ts`)  
+↓  
+Instruction Generator  
+↓  
+Text-to-Speech + On-Screen Emergency Guidance  
+
+This architecture ensures fast response times while keeping the user experience simple and mobile-first.
+
 
 ---
 ## Gemini 3 Integration
@@ -68,6 +104,25 @@ By combining **multimodal AI, real-time analysis, and multilingual support**, Li
 - **Technology**: First mobile emergency app using Gemini 3 multimodal AI
 - **Performance**: Sub-2 second response time for life-critical decisions
 
+
+---
+
+## ⚠️ Limitations & Medical Disclaimer
+
+LifeGuard AI is an assistive emergency tool and does **not** replace professional medical or emergency services.
+
+- AI analysis may be affected by lighting, camera angle, noise, or network conditions
+- Instructions are based on general emergency-response principles
+- Always contact local emergency services (112 / 911) in real emergencies
+- The system is intended to support users until professional help arrives
+
+---
+## 🏥 Validation & Standards (Planned)
+
+- CPR and emergency guidance aligned with general first-aid best practices
+- Planned alignment with American Heart Association (AHA) CPR guidelines
+- Emergency workflows inspired by standard first-aid training materials
+- Future validation planned with lifeguards and first-aid trainers
 
 ---
 
@@ -202,6 +257,7 @@ stopSpeech();
 **[Try LifeGuard AI Live](https://lifeguard-ai.vercel.app/)** - Experience the emergency response system in real-time
 
 ---
+
 
 ## 🤝 Contributing
 
