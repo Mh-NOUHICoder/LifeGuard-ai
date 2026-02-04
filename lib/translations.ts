@@ -43,6 +43,9 @@ export const translations = {
       apiAuthFailed: 'API authentication failed - check configuration',
       timeout: 'Request timeout - server not responding',
       retrying: 'Retrying...',
+      overloaded: 'The AI service is currently overloaded. Please try again in a few moments.',
+      quotaExceeded: 'API quota exceeded. Please try again later.',
+      maxRetriesExceeded: 'Analysis failed after maximum retry attempts. Please check your connection and try again.',
     },
   },
   [Language.ARABIC]: {
@@ -87,6 +90,9 @@ export const translations = {
       apiAuthFailed: 'فشل المصادقة - تحقق من التكوين',
       timeout: 'انتهت مهلة الانتظار - الخادم لا يستجيب',
       retrying: 'إعادة المحاولة...',
+      overloaded: 'خدمة الذكاء الاصطناعي مثقلة حاليًا. يرجى المحاولة مرة أخرى في لحظات.',
+      quotaExceeded: 'تم تجاوز حصة API. يرجى المحاولة لاحقًا.',
+      maxRetriesExceeded: 'فشل التحليل بعد محاولات إعادة المحاولة القصوى. يرجى التحقق من الاتصال والمحاولة مرة أخرى.',
     },
   },
   [Language.FRENCH]: {
@@ -131,6 +137,9 @@ export const translations = {
       apiAuthFailed: 'Erreur d\'authentification de l\'API - vérifiez la configuration',
       timeout: 'Délai d\'expiration - le serveur ne répond pas',
       retrying: 'Nouvelle tentative...',
+      overloaded: 'Le service d\'IA est actuellement surchargé. Veuillez réessayer dans quelques instants.',
+      quotaExceeded: 'Le quota API a été dépassé. Veuillez réessayer plus tard.',
+      maxRetriesExceeded: 'Échec de l\'analyse après le maximum de tentatives. Veuillez vérifier votre connexion et réessayer.',
     },
   },
 };

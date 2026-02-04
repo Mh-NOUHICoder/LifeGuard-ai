@@ -1,6 +1,6 @@
 'use client';
 
-import React, { RefObject, useState, useEffect, useReducer } from 'react';
+import React, { RefObject, useState } from 'react';
 import { Camera, X, SwitchCamera, Phone, Loader2, Circle } from 'lucide-react';
 import { Language } from '@/types/gemini';
 import { t } from '@/lib/translations';
@@ -15,17 +15,6 @@ interface CameraCaptureProps {
   onFlipCamera: () => void;
 }
 
-const countdownReducer = (state: number, action: { type: 'TICK' | 'RESET' }) => {
-  switch (action.type) {
-    case 'TICK':
-      return state > 0 ? state - 1 : 0;
-    case 'RESET':
-      return 5;
-    default:
-      return state;
-  }
-};
-
 export default function CameraCapture({
   videoRef,
   isAnalyzing,
@@ -34,23 +23,7 @@ export default function CameraCapture({
   onStop,
   onFlipCamera,
 }: CameraCaptureProps) {
-  const [emergencyNumber, setEmergencyNumber] = useState(getLocalEmergencyNumber());
-  const [countdown, dispatch] = useReducer(countdownReducer, 5);
-
-  useEffect(() => {
-    let timer: NodeJS.Timeout | undefined;
-    if (isAnalyzing) {
-      dispatch({ type: 'RESET' });
-      timer = setInterval(() => {
-        dispatch({ type: 'TICK' });
-      }, 1000);
-    }
-    return () => {
-      if (timer) {
-        clearInterval(timer);
-      }
-    };
-  }, [isAnalyzing]);
+  const [emergencyNumber] = useState(getLocalEmergencyNumber());
 
   return (
     <div className="space-y-6">
@@ -69,9 +42,6 @@ export default function CameraCapture({
             <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4" />
             <span className="font-bold text-blue-400 tracking-widest animate-pulse">
               {t(language, 'app.analyzing')}
-            </span>
-            <span className="font-mono text-sm text-blue-300 mt-2">
-              {countdown > 0 ? `${countdown} seconds...` : 'Processing...'}
             </span>
           </div>
         )}

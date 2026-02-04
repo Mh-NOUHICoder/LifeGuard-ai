@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Rubik, Roboto_Mono } from "next/font/google";
 import "./globals.css";
+import { Toaster } from "sonner";
 import SWRegistration from "./SWRegistration";
 
 const rubik = Rubik({
@@ -68,6 +69,7 @@ export default function RootLayout({
       </head>
       <body className={`${rubik.variable} ${robotoMono.variable} antialiased`}>
         <SWRegistration />
+        <Toaster position="top-center" richColors />
         {children}
       </body>
     </html>

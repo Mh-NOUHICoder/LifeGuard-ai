@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { generateContentWithRetry } from "@/lib/gemini-api";
 import { getEmergencyPrompt, SYSTEM_PROMPT, buildContextPrompt } from "@/lib/prompt";
+import { t } from "@/lib/translations";
+import { Language } from "@/types/gemini";
 
 interface AnalysisResponse {
   type: string;
@@ -18,7 +21,7 @@ const LANGUAGE_MAP: Record<string, string> = {
   'French': 'French (Français)'
 };
 
-interface Part {
+interface ContentPart {
   text?: string;
   inlineData?: {
     mimeType: "image/jpeg" | "audio/webm";
@@ -57,13 +60,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const ai = new GoogleGenAI({ apiKey });
+    const ai = new GoogleGenerativeAI(apiKey);
     const langName = LANGUAGE_MAP[language as string] || 'English';
 
     const contextPrompt = buildContextPrompt([], []); // Initialize with empty context for now
     const decisionPrompt = getEmergencyPrompt(langName);
 
-    const parts: Part[] = [
+    const parts: ContentPart[] = [
       { text: contextPrompt },
       { text: decisionPrompt },
       {
@@ -84,20 +87,48 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const response = await ai.models.generateContent({
-      model: MODEL_NAME,
-      contents: [{ parts }],
-      config: {
+    // Use retry wrapper to handle 429 errors gracefully
+    const response = await generateContentWithRetry(ai, MODEL_NAME, {
+      contents: [
+        {
+          role: "user",
+          parts: parts as unknown as Parameters<typeof generateContentWithRetry>[2]["contents"][0]["parts"],
+        },
+      ],
+      systemInstruction: SYSTEM_PROMPT,
+      generationConfig: {
         temperature: 0.1,
-        systemInstruction: SYSTEM_PROMPT,
       },
     });
 
-    const text = response.text || "{}";
+    // Extract text from response - handle different response formats
+    let text = "{}";
+    try {
+      const resp = response as unknown as {text?: () => string; response?: {text?: () => string}};
+      // Try the text() method first (standard SDK method)
+      if (typeof resp.text === 'function') {
+        text = resp.text();
+      } else if (typeof resp.text === 'string') {
+        text = resp.text;
+      } else if (resp.response && typeof resp.response.text === 'function') {
+        text = resp.response.text();
+      } else {
+        text = "{}";
+      }
+    } catch {
+      console.warn('[Analyze API] Could not extract text from response, using fallback');
+      text = "{}";
+    }
+
+    // Validate that we got actual text content
+    if (!text || text === "{}" || typeof text !== 'string' || text.trim().length === 0) {
+      console.error('[Analyze API] Empty response text received');
+      throw new Error('Empty response from AI service');
+    }
 
     // Parse JSON with robust extraction
     // Clean up markdown code blocks if present
-    const cleanText = text.replace(/```json/g, '').replace(/```/g, '');
+    const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
 
     let parsed: AnalysisResponse;
     try {
@@ -145,10 +176,61 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, data: parsed });
   } catch (error: unknown) {
     console.error("[Analyze API] Error:", error);
+    
+    // Get the language from request body for error translation
+    let language: Language = Language.ENGLISH;
+    try {
+      const body = await request.clone().json();
+      const langParam = body.language;
+      if (langParam === 'Arabic') language = Language.ARABIC;
+      else if (langParam === 'French') language = Language.FRENCH;
+    } catch {
+      // Use default language if body parsing fails
+    }
+
+    // Extract error message with user-friendly fallback
+    let userMessage = t(language, 'errors.analysisFailed');
+    let errorType = 'error';
+    
+    if (error instanceof Error) {
+      const msg = error.message.toLowerCase();
+      
+      // Detect rate limiting / quota exhaustion
+      if (msg.includes("overloaded") || msg.includes("quota") || msg.includes("busy") || msg.includes("resource_exhausted")) {
+        userMessage = t(language, 'errors.analysisFailed') || "The AI service is currently overloaded. Please try again in a few moments.";
+        errorType = 'warning';
+      } 
+      // Network error
+      else if (msg.includes("network") || msg.includes("timeout") || msg.includes("fetch")) {
+        userMessage = t(language, 'errors.networkError');
+      }
+      // Empty response error
+      else if (msg.includes("empty response")) {
+        userMessage = "No response from AI service. Please check your connection and try again.";
+      }
+      // Parse/JSON error
+      else if (msg.includes("parse") || msg.includes("json") || msg.includes("invalid")) {
+        userMessage = "Failed to process AI response. Please try again.";
+      }
+      // API authentication error
+      else if (msg.includes("auth") || msg.includes("401") || msg.includes("403")) {
+        userMessage = t(language, 'errors.apiAuthFailed');
+      }
+      // Generic API error
+      else if (msg.includes("api") || msg.includes("service")) {
+        userMessage = "An issue occurred with the AI service. Please try again.";
+      }
+      // Fall back to actual error message
+      else {
+        userMessage = error.message;
+      }
+    }
+    
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Analysis failed",
+        error: userMessage,
+        errorType: errorType,
       },
       { status: 500 }
     );

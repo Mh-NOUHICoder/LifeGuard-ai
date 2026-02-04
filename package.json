@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Real-time emergency response AI using Gemini API",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -22,13 +23,14 @@
   "author": "LifeGuard Team",
   "license": "MIT",
   "dependencies": {
-    "@google/genai": "^1.35.0",
+    "@google/generative-ai": "^0.17.0",
     "framer-motion": "^12.26.2",
     "lucide-react": "^0.562.0",
     "next": "16.1.1",
     "next-pwa": "^5.6.0",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "sonner": "^2.0.7"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

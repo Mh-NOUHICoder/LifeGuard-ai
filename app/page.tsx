@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import { toast } from "sonner";
 import Image from "next/image";
 
 import {
@@ -87,11 +87,13 @@ const App: React.FC = () => {
       );
 
       if (!result.stream) {
+        const errorMessage =
+          result.error ||
+          "Failed to access camera/microphone. Please check permissions in browser settings.";
+        toast.error(errorMessage);
         setState((p) => ({
           ...p,
-          error:
-            result.error ||
-            "Failed to access camera/microphone. Please check permissions in browser settings.",
+          error: errorMessage,
           isEmergencyActive: false,
         }));
         console.error("Permission result:", result);
@@ -166,6 +168,7 @@ const App: React.FC = () => {
           : err instanceof DOMException && err.name === "SecurityError"
           ? "⚠️ Security Error: Try refreshing the page or use HTTPS."
           : "❌ Failed to access camera/microphone. Please retry.";
+      toast.error(errorMsg);
       setState((p) => ({
         ...p,
         error: errorMsg,
@@ -183,6 +186,7 @@ const App: React.FC = () => {
       await startCamera();
     } catch (err) {
       console.error("Flip camera error:", err);
+      toast.error("Failed to flip camera. Try again.");
       setState((p) => ({
         ...p,
         error: "Failed to flip camera. Try again.",
@@ -315,7 +319,14 @@ const App: React.FC = () => {
 
       let instruction: EmergencyInstruction;
       try {
-        instruction = await Promise.race([analysisPromise, timeoutPromise]);
+        const analysisResult = await Promise.race([analysisPromise, timeoutPromise]);
+        
+        // Handle new response format with success/error
+        if (!analysisResult.success) {
+          throw new Error(analysisResult.error.message);
+        }
+        
+        instruction = analysisResult.data;
       } finally {
         clearTimeout(timeoutHandle!);
       }
@@ -350,6 +361,7 @@ const App: React.FC = () => {
       console.error("Full analysis error:", err);
       let errorMsg =
         err instanceof Error ? err.message : "Unknown error occurred";
+      let isWarning = false;
 
       // Provide helpful context for common errors
       if (
@@ -362,21 +374,38 @@ const App: React.FC = () => {
         errorMsg = "API authentication failed - check configuration";
       } else if (errorMsg.includes("timeout")) {
         errorMsg = "Request timeout - server not responding";
+      } else if (errorMsg.includes("overloaded") || errorMsg.includes("quota")) {
+        errorMsg = "The AI service is currently overloaded. Please try again in a few moments.";
+        isWarning = true;
       }
 
       if (retryCountRef.current < MAX_RETRIES) {
         retryCountRef.current++;
+        const retryMsg = `Analysis failed: ${errorMsg}. Retrying...`;
+        // Use warning toast for quota/overload errors, error for others
+        if (isWarning) {
+          toast.warning(retryMsg);
+        } else {
+          toast.error(retryMsg);
+        }
         setState((p) => ({
           ...p,
           isAnalyzing: false,
-          error: `❌ Analysis failed (${retryCountRef.current}/${MAX_RETRIES}): ${errorMsg}. Retrying in 2 seconds...`,
+          error: retryMsg,
         }));
         setTimeout(() => captureAndAnalyze(), 2000);
       } else {
+        const finalErrorMsg = `Analysis failed after ${MAX_RETRIES} attempts. Please check your connection and try again.`;
+        // Use warning toast for quota/overload errors
+        if (isWarning) {
+          toast.warning(finalErrorMsg);
+        } else {
+          toast.error(finalErrorMsg);
+        }
         setState((p) => ({
           ...p,
           isAnalyzing: false,
-          error: `Analysis failed after ${MAX_RETRIES} attempts: ${errorMsg}. Check connection and try again.`,
+          error: finalErrorMsg,
         }));
         retryCountRef.current = 0;
       }
@@ -561,26 +590,6 @@ const App: React.FC = () => {
 
       {/* Hidden Canvas for Processing */}
       <canvas ref={canvasRef} className="hidden" />
-
-      {/* Error Toast */}
-      <AnimatePresence>
-        {state.error && (
-          <motion.div
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
-            className="fixed bottom-4 left-4 right-4 bg-red-900/90 backdrop-blur p-4 rounded-lg border border-red-700 flex justify-between items-center"
-          >
-            <p className="text-sm font-medium">{state.error}</p>
-            <button
-              onClick={() => setState((p) => ({ ...p, error: null }))}
-              className="ml-4"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Debug Panel */}
       {/* <DebugPanel /> */}
