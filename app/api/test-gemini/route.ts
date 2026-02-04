@@ -23,7 +23,7 @@ export async function GET() {
             {
               text: "Explain how AI works in a few words",
             },
-          ] as Array<{text?: string; inlineData?: {mimeType: string; data: string}}>,
+          ],
         },
       ],
     });
