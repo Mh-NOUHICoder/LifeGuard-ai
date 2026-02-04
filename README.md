@@ -210,6 +210,23 @@ lifeguard-ai/
 | **Not Emergency**   | Normal scene                            | No action needed                           |
 
 ---
+## 🚨 Emergency Zone Detection & One-Tap Calling
+
+LifeGuard AI does not stop at detection — it helps users take **immediate real-world action**.
+
+When a dangerous situation is detected, the system:
+
+- **Highlights the detected danger zone** on screen
+- **Displays the recommended emergency number** (e.g., 150)
+- **Allows the user to instantly tap to call emergency services**
+- **Bridges the gap between AI analysis and real emergency response**
+
+This feature ensures that users can move from **AI guidance to real emergency communication in seconds**, which is critical in life-threatening situations.
+
+LifeGuard AI is designed not only to analyze emergencies, but to **connect users directly to help** when every second matters.
+
+
+---
 
 ## 📱 UX Flow
 
