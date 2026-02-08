@@ -59,10 +59,10 @@ export default function SeverityScoreCard({ severity, confidence, language }: Se
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className={`text-sm font-bold font-mono tracking-tighter leading-none truncate ${isCritical ? 'text-red-500' : 'text-slate-200'}`}>
+            <h3 className={`text-sm font-bold font-mono tracking-tighter leading-tight ${isCritical ? 'text-red-500' : 'text-slate-200'}`}>
               {isCritical ? t(language, 'metrics.criticalThreat') : t(language, 'metrics.threatPriority')}
             </h3>
-            <p className="text-[10px] text-slate-500 font-mono mt-1 font-bold tracking-widest uppercase truncate">{t(language, 'metrics.sceneIntel')}</p>
+            <p className="text-[10px] text-slate-500 font-mono mt-1 font-bold tracking-widest uppercase">{t(language, 'metrics.sceneIntel')}</p>
           </div>
         </div>
         <div className="text-right rtl:text-left flex-shrink-0 ml-4 rtl:ml-0 rtl:mr-4">

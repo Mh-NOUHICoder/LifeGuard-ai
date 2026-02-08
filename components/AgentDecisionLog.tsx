@@ -50,7 +50,7 @@ export default function AgentDecisionLog({ logs, language }: AgentDecisionLogPro
   };
 
   return (
-    <div className="bg-black border border-blue-900/30 rounded-lg overflow-hidden flex flex-col h-48 sm:h-64 shadow-2xl font-mono text-[13px]">
+    <div className="bg-black border border-blue-900/30 rounded-lg overflow-hidden flex flex-col h-48 sm:h-64 shadow-2xl font-mono text-[13px] mb-12">
       <div className="px-4 py-2 bg-white/5 border-b border-white/5 flex items-center justify-between">
         <div className="flex items-center gap-2 opacity-50">
           <Terminal className="w-3 h-3" />

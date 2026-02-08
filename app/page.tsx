@@ -163,7 +163,7 @@ const App: React.FC = () => {
 
       const imageBase64 = canvas.toDataURL("image/jpeg", 0.85).split(",")[1];
 
-      addLog("DEEP_PATH", "Streaming to Gemini 1.5 Flash...");
+      addLog("DEEP_PATH", "Streaming to Gemini 3 Flash...");
 
       const analysis = await analyzeEmergency(
         imageBase64,
@@ -299,7 +299,7 @@ const App: React.FC = () => {
                 emergencyNumber={emergencyNumber}
               />
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:mb-16">
                 <SeverityScoreCard
                   severity={agentStore.severity}
                   confidence={agentStore.confidence}
