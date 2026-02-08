@@ -20,10 +20,10 @@ export default function LanguageSelector({
     <div className="relative z-50">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 rounded-full bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700/50 text-slate-200 transition-all backdrop-blur-md active:scale-95"
+        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 transition-all backdrop-blur-md active:scale-95"
       >
-        <Globe className="w-4 h-4 text-blue-400" />
-        <span className="text-xs font-medium hidden sm:block">{selectedLanguage}</span>
+        <Globe className="w-4 h-4 text-[#E10600]" />
+        <span className="text-xs font-medium hidden sm:block font-mono uppercase">{selectedLanguage}</span>
         <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
@@ -36,7 +36,7 @@ export default function LanguageSelector({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 8, scale: 0.95 }}
               transition={{ duration: 0.15, ease: "easeOut" }}
-              className="absolute right-0 top-full mt-2 w-40 bg-slate-900/95 backdrop-blur-xl border border-slate-700/50 rounded-xl shadow-2xl overflow-hidden z-50 py-1 ring-1 ring-black/5"
+              className="absolute right-0 top-full mt-2 w-40 bg-[#0B0F14] backdrop-blur-xl border border-white/10 rounded-lg shadow-2xl overflow-hidden z-50 py-1 ring-1 ring-black/5"
             >
               {Object.values(Language).map((lang) => (
                 <button
@@ -45,8 +45,8 @@ export default function LanguageSelector({
                     onLanguageChange(lang);
                     setIsOpen(false);
                   }}
-                  className={`w-full px-4 py-2.5 text-left text-xs sm:text-sm flex items-center justify-between hover:bg-slate-800/80 transition-colors ${
-                    selectedLanguage === lang ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-slate-300'
+                  className={`w-full px-4 py-2.5 text-left text-xs sm:text-sm flex items-center justify-between hover:bg-white/5 transition-colors font-mono uppercase ${
+                    selectedLanguage === lang ? 'text-[#E10600] font-bold bg-[#E10600]/10' : 'text-slate-300'
                   }`}
                 >
                   {lang}

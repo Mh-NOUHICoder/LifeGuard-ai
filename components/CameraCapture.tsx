@@ -1,34 +1,63 @@
 'use client';
 
 import React, { RefObject, useState } from 'react';
-import { Camera, X, SwitchCamera, Phone, Loader2, Circle } from 'lucide-react';
-import { Language } from '@/types/gemini';
+import { Camera, X, SwitchCamera, Phone, Loader2, Circle, ShieldAlert, Activity, Eye, Zap } from 'lucide-react';
+import { Language, AgentState } from '@/types/gemini';
 import { t } from '@/lib/translations';
-import { getLocalEmergencyNumber, triggerEmergencyDialer } from '@/lib/utils';
+import { triggerEmergencyDialer } from '@/lib/utils';
 
 interface CameraCaptureProps {
-  videoRef: RefObject<HTMLVideoElement | null>;
+  videoRef: RefObject<HTMLVideoElement>;
   isAnalyzing: boolean;
+  agentState: AgentState;
   language: Language;
-  onAnalyze: () => void;
+  onManualTrigger: () => void;
   onStop: () => void;
   onFlipCamera: () => void;
+  isCritical: boolean;
+  emergencyNumber: string;
 }
 
 export default function CameraCapture({
   videoRef,
   isAnalyzing,
+  agentState,
   language,
-  onAnalyze,
+  onManualTrigger,
   onStop,
   onFlipCamera,
+  isCritical: isCriticalProp,
+  emergencyNumber,
 }: CameraCaptureProps) {
-  const [emergencyNumber] = useState(getLocalEmergencyNumber());
+  // Determine UI state based on Agent State
+  const isMonitoring = agentState === AgentState.MONITORING;
+  const isFastPathActive = agentState === AgentState.ASSESSING;
+  const isDeepPathActive = agentState === AgentState.ANALYZING || agentState === AgentState.VERIFYING;
+  const isCritical = isCriticalProp || agentState === AgentState.ACTIVE;
+
+  const getBorderColor = () => {
+    if (isCritical) return 'border-[#E10600] shadow-[0_0_30px_rgba(225,6,0,0.6)] animate-pulse';
+    if (isDeepPathActive) return 'border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.4)]';
+    if (isFastPathActive) return 'border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.4)]';
+    if (isMonitoring) return 'border-emerald-500/80 shadow-[0_0_15px_rgba(16,185,129,0.2)]';
+    return 'border-slate-800';
+  };
 
   return (
     <div className="space-y-6">
       {/* Camera Feed */}
-      <div className="relative rounded-2xl overflow-hidden bg-black aspect-video border border-slate-800 shadow-2xl">
+      <div className={`relative rounded-lg overflow-hidden bg-black aspect-video border-2 shadow-2xl transition-all duration-500 ${getBorderColor()}`}>
+        
+        {/* Agent HUD Overlay */}
+        <div className="absolute top-0 left-0 right-0 p-4 z-10 flex justify-between items-start bg-gradient-to-b from-black/80 to-transparent">
+           <div className="flex items-center gap-2">
+              <Activity className={`w-5 h-5 ${isMonitoring ? 'text-emerald-400 animate-pulse' : 'text-slate-500'}`} />
+              <span className="text-xs font-mono text-emerald-400/80">
+                {isMonitoring ? t(language, 'hud.fastPathActive') : t(language, 'hud.systemReady')}
+              </span>
+           </div>
+        </div>
+
         <video
           ref={videoRef}
           autoPlay
@@ -37,16 +66,30 @@ export default function CameraCapture({
           className="w-full h-full object-cover"
         />
 
-        {isAnalyzing && (
-          <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm flex flex-col items-center justify-center">
-            <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4" />
-            <span className="font-bold text-blue-400 tracking-widest animate-pulse">
-              {t(language, 'app.analyzing')}
+        {/* Deep Path Overlay */}
+        {isDeepPathActive && (
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center">
+            <div className="relative">
+              <div className="absolute inset-0 bg-amber-500/20 blur-xl rounded-full animate-pulse" />
+              <Loader2 className="w-16 h-16 text-amber-500 animate-spin relative z-10" />
+            </div>
+            <span className="mt-4 font-black text-amber-500 tracking-widest animate-pulse text-lg font-mono">
+              {t(language, 'app.deepPathProcess')}
+            </span>
+            <span className="text-xs text-amber-500/70 mt-2 font-mono uppercase">{t(language, 'hud.reasoningEngine')}</span>
+          </div>
+        )}
+
+        {/* Fast Path Trigger Overlay */}
+        {isFastPathActive && (
+           <div className="absolute inset-0 border-4 border-amber-500/50 flex items-center justify-center">
+            <span className="bg-amber-600 text-black px-4 py-2 rounded-lg font-bold animate-bounce font-mono">
+              {t(language, 'app.fastPathTrigger')}
             </span>
           </div>
         )}
 
-        <div className="absolute top-4 right-4 px-3 py-1 bg-red-600 text-[10px] font-bold rounded-full animate-pulse flex items-center gap-1">
+        <div className="absolute top-4 right-4 rtl:right-auto rtl:left-4 px-3 py-1 bg-[#E10600] text-[10px] font-bold rounded-sm animate-pulse flex items-center gap-1 font-mono">
           {t(language, 'app.recording')}{' '}
           <Circle className="w-2 h-2 fill-white" />
         </div>
@@ -54,7 +97,7 @@ export default function CameraCapture({
         {/* Flip Camera Button */}
         <button
           onClick={onFlipCamera}
-          className="absolute top-4 left-4 p-2 bg-slate-800/60 hover:bg-slate-700/80 rounded-full transition-colors backdrop-blur-sm"
+          className="absolute bottom-4 right-4 rtl:right-auto rtl:left-4 p-2 bg-black/60 hover:bg-black/80 border border-white/10 rounded-lg transition-colors backdrop-blur-sm"
           title={t(language, 'app.flipCamera')}
         >
           <SwitchCamera className="w-5 h-5 text-white" />
@@ -62,46 +105,55 @@ export default function CameraCapture({
       </div>
 
       {/* Control Buttons */}
-      <div className="flex gap-2 sm:gap-4 flex-wrap">
+      <div className="flex gap-2 sm:gap-3 flex-nowrap">
         <button
           onClick={() => triggerEmergencyDialer(emergencyNumber)}
-          className="flex-1 min-w-max bg-white text-black h-14 sm:h-16 rounded-2xl font-black text-sm sm:text-base flex items-center justify-center gap-2 hover:bg-slate-200 transition-colors shadow-lg"
+          className={`flex-1 bg-[#E10600] text-white h-12 sm:h-14 rounded-xl font-black text-sm sm:text-base flex items-center justify-center gap-2 hover:bg-[#c00500] transition-all shadow-lg font-mono uppercase tracking-wider px-2 ${
+            isCritical ? 'shadow-[0_0_25px_rgba(225,6,0,0.4)] border border-white/20' : ''
+          }`}
         >
-          <Phone className="w-5 h-5" />
-          {t(language, 'app.callEmergency')} ({emergencyNumber})
+          <Phone className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+          <span className="truncate">{t(language, 'app.callEmergency')} ({emergencyNumber})</span>
         </button>
         <button
           onClick={onStop}
-          className="px-4 sm:px-8 h-14 sm:h-16 bg-slate-800 text-slate-300 rounded-2xl font-bold hover:bg-red-900/40 hover:text-red-400 transition-all flex items-center gap-2 whitespace-nowrap text-sm sm:text-base"
+          className="flex-shrink-0 px-4 sm:px-6 h-12 sm:h-14 bg-slate-900/80 backdrop-blur-md border border-white/20 text-slate-200 rounded-xl font-bold hover:bg-red-950/40 hover:text-red-400 transition-all flex items-center gap-2 whitespace-nowrap text-sm sm:text-base font-mono uppercase"
         >
-          <X className="w-4 h-4 sm:w-5 sm:h-5" /> {t(language, 'app.exit')}
+          <X className="w-4 h-4 sm:w-5 sm:h-5" /> <span className="hidden xs:inline">{t(language, 'app.exit')}</span>
         </button>
       </div>
 
-      {/* Floating Analyze Button */}
-      <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent">
+      {/* Agent Status / Manual Trigger */}
+      <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent z-50">
         <div className="max-w-2xl mx-auto space-y-3">
           <button
-            onClick={onAnalyze}
-            disabled={isAnalyzing}
-            className={`w-full py-5 rounded-2xl font-black text-xl flex items-center justify-center gap-3 transition-all ${
-              isAnalyzing
-                ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                : 'bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_30px_rgba(37,99,235,0.4)]'
+            onClick={onManualTrigger}
+            disabled={isDeepPathActive}
+            className={`w-full py-4 rounded-xl font-black text-lg sm:text-xl flex items-center justify-center gap-2 transition-all border ${
+              isDeepPathActive
+                ? 'bg-slate-900/80 text-slate-500 cursor-not-allowed border-slate-800'
+                : isMonitoring 
+                  ? 'bg-emerald-950/30 text-emerald-400 border-emerald-500/50 hover:bg-emerald-900/50'
+                  : isCritical
+                    ? 'bg-[#E10600] text-white border-[#E10600] opacity-90'
+                  : 'bg-[#E10600] hover:bg-[#c00500] text-white border-[#E10600] shadow-[0_0_20px_rgba(225,6,0,0.4)]'
             }`}
           >
-            <Camera className={isAnalyzing ? 'animate-pulse' : ''} />
-            {isAnalyzing ? (
+            {isDeepPathActive ? (
               <>
-                <Loader2 className="animate-spin" />
-                {t(language, 'app.processing')}
+                <Zap className="w-5 h-5 animate-pulse text-yellow-400" />
+                {t(language, 'app.analyzing')}
               </>
             ) : (
-              t(language, 'app.analyzeScene')
+              <>
+                {isMonitoring ? <Eye className="w-5 h-5 animate-pulse" /> : <Camera className="w-5 h-5" />}
+                {isMonitoring ? t(language, 'app.monitoring') : t(language, 'app.analyzeScene')}
+              </>
             )}
           </button>
-          {!isAnalyzing && (
-            <p className="text-xs text-slate-400 text-center">
+          
+          {!isDeepPathActive && (
+            <p className="text-xs text-slate-400 text-center font-mono uppercase tracking-widest font-bold">
               {t(language, 'app.pointCamera')}
             </p>
           )}

@@ -18,6 +18,15 @@ export enum DangerLevel {
   LOW = 'LOW'
 }
 
+export enum AgentState {
+  IDLE = 'IDLE',
+  MONITORING = 'MONITORING', // Fast Path Active
+  ASSESSING = 'ASSESSING',   // Fast Path Triggered -> Transitioning
+  ANALYZING = 'ANALYZING',   // Deep Path Active (Gemini)
+  VERIFYING = 'VERIFYING',   // Severity Scoring
+  ACTIVE = 'ACTIVE'          // Emergency Protocol Active
+}
+
 export interface EmergencyInstruction {
   type: EmergencyType;
   dangerLevel: DangerLevel;
@@ -30,6 +39,7 @@ export interface AppState {
   language: Language;
   isEmergencyActive: boolean;
   isAnalyzing: boolean;
+  agentState: AgentState;
   lastInstruction: EmergencyInstruction | null;
   error: string | null;
 }

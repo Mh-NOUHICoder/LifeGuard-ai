@@ -153,6 +153,29 @@ export function sendNotification(
   }
 }
 
+// Comprehensive Emergency Number Map
+const EMERGENCY_NUMBERS: Record<string, string> = {
+  // North America
+  'US': '911', 'CA': '911', 'MX': '911',
+  // Europe (General 112, specific overrides below)
+  'UK': '999', 'GB': '999', 'IE': '112', 'FR': '112', 'DE': '112', 'ES': '112', 'IT': '112', 
+  'PT': '112', 'NL': '112', 'BE': '112', 'AT': '112', 'CH': '112', 'SE': '112', 'NO': '112', 
+  'DK': '112', 'FI': '112', 'PL': '112', 'GR': '112', 'CZ': '112', 'HU': '112', 'RO': '112', 
+  'BG': '112', 'HR': '112', 'SI': '112', 'SK': '112', 'EE': '112', 'LT': '112', 'LV': '112', 
+  'CY': '112', 'MT': '112', 'LU': '112', 'IS': '112',
+  // Asia
+  'CN': '110', 'JP': '110', 'IN': '112', 'KR': '112', 'ID': '112', 'TH': '191', 'VN': '113', 
+  'PH': '911', 'MY': '999', 'SG': '995', 'HK': '999', 'TW': '110',
+  // Oceania
+  'AU': '000', 'NZ': '111',
+  // South America
+  'BR': '190', 'AR': '911', 'CO': '123', 'CL': '133', 'PE': '105', 'VE': '911',
+  // Africa
+  'ZA': '112', 'EG': '122', 'MA': '15', 'NG': '112', 'KE': '999',
+  // Middle East
+  'IL': '100', 'SA': '911', 'AE': '999', 'TR': '112', 'RU': '112',
+};
+
 /**
  * Get local emergency number based on timezone/locale
  * Best-effort detection for US/CA (911), UK/IE (999), Morocco (150), EU (112)
@@ -162,56 +185,23 @@ export function getLocalEmergencyNumber(): string {
   if (typeof window === 'undefined') return '112';
 
   try {
+    // 1. Try to get country from navigator.language (e.g. "en-US" -> "US")
+    const locale = navigator.language || 'en-US';
+    const countryCode = locale.split('-')[1]?.toUpperCase();
+
+    if (countryCode && EMERGENCY_NUMBERS[countryCode]) {
+      return EMERGENCY_NUMBERS[countryCode];
+    }
+
+    // 2. Fallback to Timezone mapping for broader regions if country code fails
     const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
-    const locale = (navigator.language || '').toLowerCase();
-
-    // Australia (000)
+    
+    if (timeZone.startsWith('America/')) return '911';
+    if (timeZone.startsWith('Europe/')) return '112';
     if (timeZone.startsWith('Australia/')) return '000';
+    if (timeZone.startsWith('Asia/')) return '110'; // Generic Asia fallback
+    if (timeZone.startsWith('Africa/')) return '112'; // Generic Africa fallback
 
-    // New Zealand (111)
-    if (timeZone.startsWith('Pacific/Auckland') || timeZone.startsWith('Pacific/Chatham')) return '111';
-
-    // UK & Ireland (999)
-    if (
-      timeZone === 'Europe/London' || 
-      timeZone === 'Europe/Dublin' || 
-      timeZone === 'Europe/Belfast' ||
-      timeZone === 'Europe/Jersey' ||
-      timeZone === 'Europe/Guernsey' ||
-      timeZone === 'Europe/Isle_of_Man' ||
-      locale === 'en-gb' || 
-      locale === 'en-ie'
-    ) {
-      return '999';
-    }
-
-    // Brazil (190)
-    if (timeZone.includes('Sao_Paulo') || timeZone.includes('Rio_Branco') || timeZone.includes('Belem') || timeZone.includes('Fortaleza') || timeZone.includes('Manaus') || timeZone.includes('Recife') || timeZone.includes('Araguaina') || timeZone.includes('Maceio') || timeZone.includes('Bahia') || timeZone.includes('Cuiaba') || timeZone.includes('Campo_Grande') || timeZone.includes('Porto_Velho') || timeZone.includes('Boa_Vista') || timeZone.includes('Noronha') || timeZone.includes('Eirunepe') || timeZone.includes('Santarem')) {
-      return '190';
-    }
-
-    // Morocco (150)
-    if (timeZone === 'Africa/Casablanca' || locale.endsWith('-ma')) {
-      return '150';
-    }
-
-    // Asia Specifics
-    if (timeZone.startsWith('Asia/')) {
-      if (timeZone.includes('Tokyo')) return '110'; // Japan
-      if (timeZone.includes('Hong_Kong') || timeZone.includes('Singapore')) return '999';
-      // India, South Korea, etc use 112
-    }
-
-    // North & South America (911) - Catch-all for America/ zones (US, Canada, Mexico, etc)
-    // This covers all US timezones (Detroit, Boise, etc) that were missed before
-    if (timeZone.startsWith('America/') || timeZone.startsWith('US/') || timeZone.startsWith('Canada/') || locale === 'en-us' || locale === 'en-ca') {
-      return '911';
-    }
-
-    // Europe (General)
-    if (timeZone.startsWith('Europe/')) {
-      return '112';
-    }
   } catch (e) {
     console.warn('[LifeGuard] Failed to detect region for emergency number', e);
   }

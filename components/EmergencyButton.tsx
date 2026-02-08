@@ -52,7 +52,7 @@ export default function EmergencyButton({
         {/* LIVE EMERGENCY GLOW */}
         {!isPressing && (
           <motion.div
-            className="absolute inset-0 rounded-full bg-red-500/20 blur-2xl"
+            className="absolute inset-0 rounded-full bg-[#E10600]/20 blur-2xl"
             animate={{ scale: [1, 1.15, 1], opacity: [0.3, 0.6, 0.3] }}
             transition={{ duration: 2.5, repeat: Infinity }}
           />
@@ -69,7 +69,7 @@ export default function EmergencyButton({
             cy="50"
             r="46"
             fill="none"
-            stroke="#f31515ef"
+            stroke="#330505"
             strokeWidth="4"
           />
 
@@ -79,7 +79,7 @@ export default function EmergencyButton({
             cy="50"
             r="46"
             fill="none"
-            stroke="#ef4444"
+            stroke="#E10600"
             strokeWidth="4"
             strokeLinecap="round"
             strokeDasharray={CIRCUMFERENCE}
@@ -123,14 +123,14 @@ export default function EmergencyButton({
             transition-all duration-200 shadow-xl
             ${
               isPressing
-                ? 'scale-95 bg-red-600 border-red-500 shadow-red-900/60'
-                : 'bg-slate-900 border-slate-700 hover:border-red-500/70 animate-emergency'
+                ? 'scale-95 bg-[#E10600] border-red-500 shadow-red-900/60'
+                : 'bg-[#0B0F14] border-[#E10600]/30 hover:border-[#E10600] hover:shadow-[0_0_30px_rgba(225,6,0,0.3)]'
             }
           `}
         >
           <Siren
             className={`w-16 h-16 mb-2 transition-all ${
-              isPressing ? 'text-white scale-110' : 'text-red-500'
+              isPressing ? 'text-white scale-110' : 'text-[#E10600]'
             }`}
           />
 
