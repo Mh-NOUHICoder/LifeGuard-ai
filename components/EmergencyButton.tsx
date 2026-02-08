@@ -52,7 +52,7 @@ export default function EmergencyButton({
         {/* LIVE EMERGENCY GLOW */}
         {!isPressing && (
           <motion.div
-            className="absolute inset-0 rounded-full bg-[#E10600]/20 blur-2xl"
+            className="absolute inset-0 rounded-full bg-[#E10600] blur-2xl"
             animate={{ scale: [1, 1.15, 1], opacity: [0.3, 0.6, 0.3] }}
             transition={{ duration: 2.5, repeat: Infinity }}
           />
@@ -69,7 +69,7 @@ export default function EmergencyButton({
             cy="50"
             r="46"
             fill="none"
-            stroke="#330505"
+            stroke="#d50404a1"
             strokeWidth="4"
           />
 
@@ -79,7 +79,7 @@ export default function EmergencyButton({
             cy="50"
             r="46"
             fill="none"
-            stroke="#E10600"
+            stroke="#ee110a"
             strokeWidth="4"
             strokeLinecap="round"
             strokeDasharray={CIRCUMFERENCE}
