@@ -28,14 +28,14 @@ export default function AgentDecisionLog({ logs, language }: AgentDecisionLogPro
       case 'POLICY': return 'text-orange-500';
       case 'DECISION': return 'text-cyan-400';
       case 'DEEP_PATH': return 'text-indigo-400';
-      case 'FAST_PATH': return 'text-yellow-400';
+      case 'FAST_PATH': return 'text-[#00F2FF]';
       default: return 'text-slate-400';
     }
   };
 
   const getPathColor = (path: string) => {
     switch (path) {
-      case 'FAST': return 'text-yellow-400';
+      case 'FAST': return 'text-[#00F2FF]';
       case 'ESCALATED': return 'text-red-400';
       default: return 'text-blue-400';
     }

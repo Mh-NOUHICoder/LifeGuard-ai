@@ -1,6 +1,6 @@
 'use client';
 
-import React, { RefObject } from 'react';
+import React, { RefObject, useEffect } from 'react';
 import { Camera, X, SwitchCamera, Phone, Loader2, Circle, Activity, Eye, Zap } from 'lucide-react';
 import { Language, AgentState } from '@/types/gemini';
 import { t } from '@/lib/translations';
@@ -12,10 +12,12 @@ interface CameraCaptureProps {
   agentState: AgentState;
   language: Language;
   onManualTrigger: () => void;
+  onCancelAnalysis: () => void;
   onStop: () => void;
   onFlipCamera: () => void;
   isCritical: boolean;
   emergencyNumber: string;
+  onStartStream?: () => void;
 }
 
 export default function CameraCapture({
@@ -23,10 +25,12 @@ export default function CameraCapture({
   agentState,
   language,
   onManualTrigger,
+  onCancelAnalysis,
   onStop,
   onFlipCamera,
   isCritical: isCriticalProp,
   emergencyNumber,
+  onStartStream,
 }: CameraCaptureProps) {
   // Determine UI state based on Agent State
   const isMonitoring = agentState === AgentState.MONITORING;
@@ -34,10 +38,16 @@ export default function CameraCapture({
   const isDeepPathActive = agentState === AgentState.ANALYZING || agentState === AgentState.VERIFYING;
   const isCritical = isCriticalProp || agentState === AgentState.ACTIVE;
 
+  // useEffect(() => {
+  //   if (onStartStream) {
+  //     onStartStream();
+  //   }
+  // }, [onStartStream]);
+
   const getBorderColor = () => {
     if (isCritical) return 'border-[#E10600] shadow-[0_0_30px_rgba(225,6,0,0.6)] animate-pulse';
-    if (isDeepPathActive) return 'border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.4)]';
-    if (isFastPathActive) return 'border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.4)]';
+    if (isDeepPathActive) return 'border-[#00F2FF] shadow-[0_0_20px_rgba(0,242,255,0.4)]';
+    if (isFastPathActive) return 'border-[#00F2FF] shadow-[0_0_20px_rgba(0,242,255,0.4)]';
     if (isMonitoring) return 'border-emerald-500/80 shadow-[0_0_15px_rgba(16,185,129,0.2)]';
     return 'border-slate-800';
   };
@@ -67,22 +77,22 @@ export default function CameraCapture({
 
         {/* Deep Path Overlay */}
         {isDeepPathActive && (
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex flex-col items-center justify-center">
             <div className="relative">
-              <div className="absolute inset-0 bg-amber-500/20 blur-xl rounded-full animate-pulse" />
-              <Loader2 className="w-16 h-16 text-amber-500 animate-spin relative z-10" />
+              <div className="absolute inset-0 bg-[#00F2FF] blur-xl rounded-full animate-pulse" />
+              <Loader2 className="w-16 h-16 text-[#00F2FF] animate-spin relative z-10" />
             </div>
-            <span className="mt-4 font-black text-amber-500 tracking-widest animate-pulse text-lg font-mono">
+            <span className="mt-4 font-black text-[#00F2FF] tracking-widest animate-pulse text-lg font-mono">
               {t(language, 'app.deepPathProcess')}
             </span>
-            <span className="text-xs text-amber-500/70 mt-2 font-mono uppercase">{t(language, 'hud.reasoningEngine')}</span>
+            <span className="text-xs text-[#00F2FF]/70 mt-2 font-mono uppercase">{t(language, 'hud.reasoningEngine')}</span>
           </div>
         )}
 
         {/* Fast Path Trigger Overlay */}
         {isFastPathActive && (
-           <div className="absolute inset-0 border-4 border-amber-500/50 flex items-center justify-center">
-            <span className="bg-amber-600 text-black px-4 py-2 rounded-lg font-bold animate-bounce font-mono">
+           <div className="absolute inset-0 border-4 border-[#00F2FF]/50 flex items-center justify-center">
+            <span className="bg-[#00F2FF] text-black px-4 py-2 rounded-lg font-bold animate-bounce font-mono">
               {t(language, 'app.fastPathTrigger')}
             </span>
           </div>
@@ -126,11 +136,10 @@ export default function CameraCapture({
       <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent z-50">
         <div className="max-w-2xl mx-auto space-y-3">
           <button
-            onClick={onManualTrigger}
-            disabled={isDeepPathActive}
+            onClick={isDeepPathActive ? onCancelAnalysis : onManualTrigger}
             className={`w-full py-4 rounded-xl font-black text-lg sm:text-xl flex items-center justify-center gap-2 transition-all border ${
               isDeepPathActive
-                ? 'bg-slate-900/80 text-slate-500 cursor-not-allowed border-slate-800'
+                ? 'bg-slate-900/80 text-red-400 border-red-500/50 hover:bg-red-900/20 cursor-pointer'
                 : isMonitoring 
                   ? 'bg-emerald-950/30 text-emerald-400 border-emerald-500/50 hover:bg-emerald-900/50'
                   : isCritical
@@ -140,8 +149,8 @@ export default function CameraCapture({
           >
             {isDeepPathActive ? (
               <>
-                <Zap className="w-5 h-5 animate-pulse text-yellow-400" />
-                {t(language, 'app.analyzing')}
+                <X className="w-5 h-5 animate-pulse text-red-400" />
+                {t(language, 'app.stopAnalysis')}
               </>
             ) : (
               <>

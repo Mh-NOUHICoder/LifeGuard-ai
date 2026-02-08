@@ -56,8 +56,11 @@ const App: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const cameraFacingRef = useRef<"user" | "environment">("environment");
+  const isActiveRef = useRef<boolean>(false);
+  const analysisAbortControllerRef = useRef<AbortController | null>(null);
 
   const retryCountRef = useRef(0);
   const MAX_RETRIES = 3;
@@ -95,42 +98,97 @@ const App: React.FC = () => {
 
   /* ------------------------------- CAMERA LOGIC ------------------------------ */
 
-  const startCamera = async () => {
+  const startCamera = useCallback(async () => {
     try {
+      if (!isActiveRef.current) return;
+
       if (!isSecureContext()) console.warn("Insecure context");
+
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+      }
 
       const result = await requestMediaPermissionsWithFacing(
         cameraFacingRef.current,
       );
+
+      if (!isActiveRef.current) {
+        result.stream?.getTracks().forEach((t) => t.stop());
+        return;
+      }
 
       if (!result.stream) {
         toast.error(result.error || "Camera permission denied");
         return;
       }
 
+      streamRef.current = result.stream;
+
       if (videoRef.current) {
         videoRef.current.srcObject = result.stream;
+        videoRef.current.onloadedmetadata = () => {
+          if (!isActiveRef.current) return;
+          videoRef.current?.play().catch((e) => {
+            console.warn("Auto-play failed", e);
+            // Retry play if failed (sometimes needed on mobile)
+          });
+          console.log("Camera stream ready");
+        };
+      }
+      
+      // Initialize Audio Recorder
+      let mimeType = "";
+      const possibleMimeTypes = [
+        "audio/webm;codecs=opus",
+        "audio/webm",
+        "audio/mp4",
+        "audio/ogg",
+      ];
+
+      for (const type of possibleMimeTypes) {
+        if (MediaRecorder.isTypeSupported(type)) {
+          mimeType = type;
+          break;
+        }
       }
 
-      const recorder = new MediaRecorder(result.stream);
-      recorder.ondataavailable = (e) =>
-        e.data.size && audioChunksRef.current.push(e.data);
-      recorder.start(100);
-      mediaRecorderRef.current = recorder;
-    } catch {
-      toast.error("Failed to start camera");
+      try {
+        const recorder = new MediaRecorder(result.stream, mimeType ? { mimeType } : {});
+        recorder.ondataavailable = (e) => {
+          if (e.data.size > 0) audioChunksRef.current.push(e.data);
+        };
+        recorder.start();
+        mediaRecorderRef.current = recorder;
+      } catch (e) {
+        console.warn("Audio recording not supported or failed", e);
+      }
+      
+    } catch (err: any) {
+      toast.error("Failed to start camera: " + (err.message || "Unknown error"));
     }
-  };
+  }, []);
+  
 
-  const stopCamera = () => {
-    if (videoRef.current?.srcObject) {
-      (videoRef.current.srcObject as MediaStream)
-        .getTracks()
-        .forEach((t) => t.stop());
+  const stopCamera = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
     }
-    mediaRecorderRef.current?.stop();
+
+    if (videoRef.current) {
+      if (videoRef.current.srcObject) {
+        const stream = videoRef.current.srcObject as MediaStream;
+        stream.getTracks().forEach((t) => t.stop());
+      }
+      videoRef.current.srcObject = null;
+    }
+
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.stop();
+    }
+    mediaRecorderRef.current = null;
     stopSpeech();
-  };
+  }, []);
 
   const flipCamera = async () => {
     stopCamera();
@@ -139,12 +197,40 @@ const App: React.FC = () => {
     await startCamera();
   };
 
+  // Lifecycle Management
+  useEffect(() => {
+    if (state.isEmergencyActive) {
+      isActiveRef.current = true;
+      startCamera();
+    }
+    return () => {
+      isActiveRef.current = false;
+      stopCamera();
+    };
+  }, [state.isEmergencyActive, startCamera, stopCamera]);
+
   /* ------------------------------ AI ANALYSIS -------------------------------- */
+
+  const cancelAnalysis = () => {
+    if (analysisAbortControllerRef.current) {
+      analysisAbortControllerRef.current.abort();
+      analysisAbortControllerRef.current = null;
+    }
+    setState((p) => ({
+      ...p,
+      isAnalyzing: false,
+      agentState: AgentState.MONITORING,
+    }));
+    addLog("FAST_PATH", "Analysis manually stopped.");
+  };
 
   const captureAndAnalyze = async () => {
     if (!videoRef.current || !canvasRef.current || state.isAnalyzing) return;
 
-    addLog("FAST_PATH", "Acquiring visual target...");
+    const abortController = new AbortController();
+    analysisAbortControllerRef.current = abortController;
+
+    addLog("FAST_PATH", "VERIFYING THREAT...");
 
     setState((p) => ({
       ...p,
@@ -154,6 +240,13 @@ const App: React.FC = () => {
 
     try {
       const video = videoRef.current;
+      
+      // Ensure camera is actually ready to prevent black frames or errors
+      if (video.readyState < 2) { // HAVE_CURRENT_DATA
+         toast.warning("Camera initializing...");
+         throw new Error("Camera stream not ready");
+      }
+
       const canvas = canvasRef.current;
       canvas.width = 640;
       canvas.height = (video.videoHeight / video.videoWidth) * 640;
@@ -163,13 +256,42 @@ const App: React.FC = () => {
 
       const imageBase64 = canvas.toDataURL("image/jpeg", 0.85).split(",")[1];
 
+      if (abortController.signal.aborted) return;
+
+      // Process Audio
+      let audioBase64: string | null = null;
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
+        const stopPromise = new Promise<void>((resolve) => {
+          if (!mediaRecorderRef.current) return resolve();
+          mediaRecorderRef.current.onstop = () => resolve();
+        });
+        
+        mediaRecorderRef.current.stop();
+        await stopPromise;
+
+        if (audioChunksRef.current.length > 0) {
+          const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+          const reader = new FileReader();
+          audioBase64 = await new Promise<string>((resolve) => {
+            reader.onloadend = () => resolve((reader.result as string).split(",")[1]);
+            reader.readAsDataURL(blob);
+          });
+        }
+        audioChunksRef.current = [];
+        mediaRecorderRef.current.start();
+      }
+
+      if (abortController.signal.aborted) return;
+
       addLog("DEEP_PATH", "Streaming to Gemini 3 Flash...");
 
       const analysis = await analyzeEmergency(
         imageBase64,
-        null,
+        audioBase64,
         state.language,
       );
+
+      if (abortController.signal.aborted) return;
 
       if (!analysis.success) throw new Error(analysis.error.message);
 
@@ -208,7 +330,16 @@ const App: React.FC = () => {
         state.language,
       );
     } catch (e: any) {
+      if (abortController.signal.aborted) return;
+
       addLog("FAST_PATH", `Analysis retry ${retryCountRef.current + 1}/${MAX_RETRIES}`);
+      
+      // Don't retry if it was a camera ready error, just reset
+      if (e.message === "Camera stream not ready") {
+         setState((p) => ({ ...p, isAnalyzing: false, agentState: AgentState.MONITORING }));
+         return;
+      }
+
       if (++retryCountRef.current <= MAX_RETRIES) {
         setTimeout(captureAndAnalyze, 1500);
       } else {
@@ -217,6 +348,8 @@ const App: React.FC = () => {
         retryCountRef.current = 0;
         setState((p) => ({ ...p, isAnalyzing: false }));
       }
+    } finally {
+      analysisAbortControllerRef.current = null;
     }
   };
 
@@ -224,11 +357,12 @@ const App: React.FC = () => {
 
   const toggleEmergency = () => {
     if (!state.isEmergencyActive) {
+      isActiveRef.current = true;
       setState((p) => ({ ...p, isEmergencyActive: true }));
       addLog("FAST_PATH", "System activated. Initializing sensors...");
-      startCamera();
     } else {
-      stopCamera();
+      cancelAnalysis();
+      stopSpeech();
       setState((p) => ({
         ...p,
         isEmergencyActive: false,
@@ -245,7 +379,7 @@ const App: React.FC = () => {
 
   return (
     <div
-      className={`min-h-screen bg-[#050507] text-slate-200 ${
+      className={`min-h-screen  bg-[#050507] text-slate-200 ${
         isRTL ? "rtl" : "ltr"
       }`}
       dir={isRTL ? "rtl" : "ltr"}
@@ -275,15 +409,16 @@ const App: React.FC = () => {
       </header>
 
       {/* MAIN */}
-      <main className="pt-24 pb-16 px-4">
-        {!state.isEmergencyActive ? (
+      <main className="pt-24 pb-16 px-4 ">
+        {!state.isEmergencyActive && (
           <div className="max-w-md mx-auto flex items-center justify-center h-[calc(100vh-6rem)] px-4">
             <EmergencyButton
               language={state.language}
               onStart={toggleEmergency}
             />
           </div>
-        ) : (
+        )}
+        {state.isEmergencyActive && (
           <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10">
             {/* LEFT */}
             <div className="space-y-6">
@@ -293,10 +428,12 @@ const App: React.FC = () => {
                 agentState={state.agentState}
                 language={state.language}
                 onManualTrigger={captureAndAnalyze}
+                onCancelAnalysis={cancelAnalysis}
                 onStop={toggleEmergency}
                 onFlipCamera={flipCamera}
                 isCritical={isCritical}
                 emergencyNumber={emergencyNumber}
+                onStartStream={startCamera}
               />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:mb-16">

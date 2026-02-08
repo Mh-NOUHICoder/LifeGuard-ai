@@ -66,6 +66,14 @@ export default function RootLayout({
           name="apple-mobile-web-app-status-bar-style"
           content="black-translucent"
         />
+        <style>{`
+          html::-webkit-scrollbar, body::-webkit-scrollbar {
+            display: none;
+          }
+          html, body {
+            scrollbar-width: none;
+          }
+        `}</style>
       </head>
       <body className={`${rubik.variable} ${robotoMono.variable} antialiased`}>
         <SWRegistration />
