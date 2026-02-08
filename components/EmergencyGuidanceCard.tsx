@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Volume2, AlertTriangle, CheckCircle2, Flame, Droplet, Activity, Info } from 'lucide-react';
+import { Volume2, AlertTriangle, Flame, Droplet, Activity } from 'lucide-react';
 import { Language } from '@/types/gemini';
 import { t } from '@/lib/translations';
 

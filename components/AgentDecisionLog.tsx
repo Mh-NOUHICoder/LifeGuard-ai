@@ -3,7 +3,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Terminal, ChevronDown } from 'lucide-react';
+import { Terminal } from 'lucide-react';
 import { AgentLogEntry, LogType } from '@/types/agent';
 import { Language } from '@/types/gemini';
 import { t } from '@/lib/translations';

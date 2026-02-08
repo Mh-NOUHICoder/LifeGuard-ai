@@ -1,13 +1,13 @@
 'use client';
 
-import React, { RefObject, useState } from 'react';
-import { Camera, X, SwitchCamera, Phone, Loader2, Circle, ShieldAlert, Activity, Eye, Zap } from 'lucide-react';
+import React, { RefObject } from 'react';
+import { Camera, X, SwitchCamera, Phone, Loader2, Circle, Activity, Eye, Zap } from 'lucide-react';
 import { Language, AgentState } from '@/types/gemini';
 import { t } from '@/lib/translations';
 import { triggerEmergencyDialer } from '@/lib/utils';
 
 interface CameraCaptureProps {
-  videoRef: RefObject<HTMLVideoElement>;
+  videoRef: RefObject<HTMLVideoElement | null>;
   isAnalyzing: boolean;
   agentState: AgentState;
   language: Language;
@@ -20,7 +20,6 @@ interface CameraCaptureProps {
 
 export default function CameraCapture({
   videoRef,
-  isAnalyzing,
   agentState,
   language,
   onManualTrigger,
@@ -59,7 +58,7 @@ export default function CameraCapture({
         </div>
 
         <video
-          ref={videoRef}
+          ref={videoRef as React.RefObject<HTMLVideoElement>}
           autoPlay
           muted
           playsInline

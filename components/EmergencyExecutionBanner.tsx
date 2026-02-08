@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Radio, X, Copy, Check, TriangleAlert } from 'lucide-react';
+import { X, Copy, Check, TriangleAlert } from 'lucide-react';
 import { ExecutionEvent } from '@/types/agent';
 import { toast } from 'sonner';
 

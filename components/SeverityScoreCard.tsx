@@ -13,15 +13,8 @@ interface SeverityScoreCardProps {
   language: Language;
 }
 
-export default function SeverityScoreCard({ severity, confidence, lastUpdated, language }: SeverityScoreCardProps) {
+export default function SeverityScoreCard({ severity, confidence, language }: SeverityScoreCardProps) {
   // Determine color based on severity
-  const getColor = (score: number) => {
-    if (score >= 80) return '#FF0000';
-    if (score >= 50) return '#F59E0B';
-    return '#10B981';
-  };
-
-  const scoreColor = getColor(severity);
   // Calculate rotation: 0 -> -90deg, 100 -> 90deg
   const rotation = (severity / 100) * 180 - 90;
 

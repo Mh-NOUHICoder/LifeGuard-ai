@@ -32,10 +32,12 @@ export default function AgentLatencyPanel({
   language
 }: AgentLatencyPanelProps) {
   const [activeStage, setActiveStage] = useState(0);
+  const [tps, setTps] = useState('0.0');
 
   useEffect(() => {
     if (!isAnalyzing) {
       setActiveStage(0);
+      setTps('0.0');
       return;
     }
 
@@ -44,6 +46,7 @@ export default function AgentLatencyPanel({
         if (prev < PIPELINE.length - 1) return prev + 1;
         return prev;
       });
+      setTps((120 + Math.random() * 40).toFixed(1));
     }, 700 + Math.random() * 400); // organic timing
 
     return () => clearInterval(interval);
@@ -152,7 +155,7 @@ export default function AgentLatencyPanel({
         <div>
           <div className="text-emerald-500/40 uppercase">{t(language, 'pipeline.telemetry.tokensPerSec')}</div>
           <div className="text-emerald-500 font-bold">
-            {isAnalyzing ? (120 + Math.random() * 40).toFixed(1) : '0.0'}
+            {tps}
           </div>
         </div>
         <div>
