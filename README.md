@@ -28,15 +28,15 @@
 
 ## 🥇 Why LifeGuard AI Stands Out
 
-Unlike static first-aid apps or pre-recorded videos, LifeGuard AI provides **real-time, AI-powered emergency assistance** based on what the camera and microphone actually detect.
+LifeGuard AI transcends the role of a passive assistant—it is an **autonomous emergency agent** engineered to take decisive action. While traditional apps require you to search for answers, LifeGuard AI **perceives, reasons, and acts** on your behalf.
 
-- Adapts instructions dynamically to the live situation
-- Combines vision, audio, and language understanding
-- Works instantly on any smartphone browser
-- Provides multilingual, voice-guided assistance
-- Designed for the critical first minutes before professionals arrive
+It doesn't just "see"; it **scans** for danger zones. It doesn't just "suggest"; it **commands** the situation with authoritative voice guidance.
 
-LifeGuard AI is not just an information app — it is an **active AI emergency assistant**.
+- **Agentic Action**: Takes charge of the situation, preparing emergency calls and directing users instantly.
+- **Active Perception**: Continuously monitors the environment, adapting protocols as the threat evolves.
+- **Multimodal Reasoning**: Synthesizes vision, audio, and context to make medical-grade decisions in real-time.
+
+LifeGuard AI is not a chatbot you talk to; it is a **lifeguard that watches over you**.
 
 ---
 ## 🏆 Gemini 3 Hackathon Alignment
@@ -66,6 +66,18 @@ Instruction Generator
 Text-to-Speech + On-Screen Emergency Guidance  
 
 This architecture ensures fast response times while keeping the user experience simple and mobile-first.
+
+### ⚡ Cognitive Architecture: Fast Path & Deep Path
+
+To balance split-second reaction times with deep reasoning, LifeGuard AI employs a dual-path cognitive architecture:
+
+#### 1. Fast Path (The Reflex)
+* **Why?** In emergencies, system latency creates panic. Users need immediate feedback that the agent is active.
+* **How?** Handles immediate sensor fusion, visual target acquisition, and local heuristic checks. It ensures the "eyes" of the agent are locked on the scene instantly, bridging the gap between activation and analysis.
+
+#### 2. Deep Path (The Brain)
+* **Why?** Complex emergencies require more than pattern matching—they demand causal reasoning and safety verification.
+* **How?** Streams encrypted multimodal data to **Gemini 3**, leveraging its massive context window to deconstruct the scene. It differentiates between arterial bleeding and minor wounds, identifies environmental hazards (fire, smoke), and formulates a precise, step-by-step safety protocol.
 
 
 ---
@@ -302,4 +314,3 @@ MIT License – Safe for personal & commercial use
 ---
 
 **Save lives. Every second counts. 🚨**
-
