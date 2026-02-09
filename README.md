@@ -98,6 +98,19 @@ By combining **multimodal AI, real-time analysis, and multilingual support**, Li
 
 ---
 
+###  Trace ID (For Debugging & Support)
+
+Each emergency analysis generates a unique **Trace ID**.
+
+If you experience unexpected behavior or incorrect results:
+1. Copy the Trace ID shown in the interface.
+2. Open a GitHub Issue or contact the project maintainer.
+3. Paste the Trace ID along with a brief description of what happened.
+
+This Trace ID helps us quickly locate the request in server logs and improve reliability.
+
+---
+
 ## 🎯 Features
 
 - **Real-time Analysis**: Instant emergency detection using Gemini's multimodal AI  
