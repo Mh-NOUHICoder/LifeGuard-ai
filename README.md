@@ -79,6 +79,8 @@ To balance split-second reaction times with deep reasoning, LifeGuard AI employs
 * **Why?** Complex emergencies require more than pattern matching—they demand causal reasoning and safety verification.
 * **How?** Streams encrypted multimodal data to **Gemini 3**, leveraging its massive context window to deconstruct the scene. It differentiates between arterial bleeding and minor wounds, identifies environmental hazards (fire, smoke), and formulates a precise, step-by-step safety protocol.
 
+![LifeGuard AI Cognitive Architecture](./lifeguard-ai-architecture.png)
+
 
 ---
 ## Gemini 3 Integration
