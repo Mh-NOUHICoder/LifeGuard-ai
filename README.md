@@ -216,15 +216,6 @@ lifeguard-ai/
 └── README.md                   # Full documentation
 ```
 
----
-
-## 📋 Emergency Types Detected
-
-| Type                | Trigger                                 | Response                                   |
-| ------------------- | --------------------------------------- | ------------------------------------------ |
-| **Severe Bleeding** | Heavy bleeding, deep wounds, blood loss | Direct pressure, elevation, emergency call |
-| **Fire/Smoke**      | Flames, fire, smoke                     | Evacuate, stop-drop-roll, call emergency   |
-| **Not Emergency**   | Normal scene                            | No action needed                           |
 
 ---
 ## 🚨 Emergency Zone Detection & One-Tap Calling
