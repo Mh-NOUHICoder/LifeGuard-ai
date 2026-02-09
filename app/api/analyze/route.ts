@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, Part } from "@google/generative-ai";
 import { generateContentWithRetry } from "@/lib/gemini-api";
 import { getEmergencyPrompt, SYSTEM_PROMPT, buildContextPrompt } from "@/lib/prompt";
 import { t } from "@/lib/translations";
@@ -20,14 +20,6 @@ const LANGUAGE_MAP: Record<string, string> = {
   'Arabic': 'Arabic (العربية)',
   'French': 'French (Français)'
 };
-
-interface ContentPart {
-  text?: string;
-  inlineData?: {
-    mimeType: "image/jpeg" | "audio/webm";
-    data: string;
-  };
-}
 
 const MODEL_NAME = "gemini-3-flash-preview";
 
@@ -66,7 +58,7 @@ export async function POST(request: NextRequest) {
     const contextPrompt = buildContextPrompt([], []); // Initialize with empty context for now
     const decisionPrompt = getEmergencyPrompt(langName);
 
-    const parts: ContentPart[] = [
+    const parts: Part[] = [
       { text: contextPrompt },
       { text: decisionPrompt },
       {
@@ -92,7 +84,7 @@ export async function POST(request: NextRequest) {
       contents: [
         {
           role: "user",
-          parts: parts as unknown as Parameters<typeof generateContentWithRetry>[2]["contents"][0]["parts"],
+          parts: parts,
         },
       ],
       systemInstruction: SYSTEM_PROMPT,
@@ -101,23 +93,13 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Extract text from response - handle different response formats
-    let text = "{}";
+    let text: string;
     try {
-      const resp = response as unknown as {text?: () => string; response?: {text?: () => string}};
-      // Try the text() method first (standard SDK method)
-      if (typeof resp.text === 'function') {
-        text = resp.text();
-      } else if (typeof resp.text === 'string') {
-        text = resp.text;
-      } else if (resp.response && typeof resp.response.text === 'function') {
-        text = resp.response.text();
-      } else {
-        text = "{}";
-      }
-    } catch {
-      console.warn('[Analyze API] Could not extract text from response, using fallback');
-      text = "{}";
+      text = response.response.text();
+    } catch (e) {
+      console.error('[Analyze API] Failed to extract text from Gemini response:', e);
+      console.error('[Analyze API] Full response object:', JSON.stringify(response, null, 2));
+      throw new Error('Could not parse response from AI service.');
     }
 
     // Validate that we got actual text content

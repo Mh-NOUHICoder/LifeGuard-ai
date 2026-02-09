@@ -1,7 +1,7 @@
 'use client';
 
 import React, { RefObject, useEffect } from 'react';
-import { Camera, X, SwitchCamera, Phone, Loader2, Circle, Activity, Eye, Zap } from 'lucide-react';
+import { Camera, X, SwitchCamera, Phone, Loader2, Circle, Activity, Eye } from 'lucide-react';
 import { Language, AgentState } from '@/types/gemini';
 import { t } from '@/lib/translations';
 import { triggerEmergencyDialer } from '@/lib/utils';
@@ -38,16 +38,9 @@ export default function CameraCapture({
   const isDeepPathActive = agentState === AgentState.ANALYZING || agentState === AgentState.VERIFYING;
   const isCritical = isCriticalProp || agentState === AgentState.ACTIVE;
 
-  // useEffect(() => {
-  //   if (onStartStream) {
-  //     onStartStream();
-  //   }
-  // }, [onStartStream]);
-
   const getBorderColor = () => {
     if (isCritical) return 'border-[#E10600] shadow-[0_0_30px_rgba(225,6,0,0.6)] animate-pulse';
-    if (isDeepPathActive) return 'border-[#00F2FF] shadow-[0_0_20px_rgba(0,242,255,0.4)]';
-    if (isFastPathActive) return 'border-[#00F2FF] shadow-[0_0_20px_rgba(0,242,255,0.4)]';
+    if (isDeepPathActive || isFastPathActive) return 'border-[#00F2FF] shadow-[0_0_20px_rgba(0,242,255,0.4)]';
     if (isMonitoring) return 'border-emerald-500/80 shadow-[0_0_15px_rgba(16,185,129,0.2)]';
     return 'border-slate-800';
   };

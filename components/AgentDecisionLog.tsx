@@ -67,7 +67,6 @@ export default function AgentDecisionLog({ logs, language }: AgentDecisionLogPro
         <AnimatePresence initial={false}>
           {logs.map((log) => {
             // Derive signals
-            const traceId = log.id.substring(0, 6).toUpperCase();
             
             let path = 'DEEP';
             if (log.type === 'FAST_PATH') path = 'FAST';
@@ -88,7 +87,6 @@ export default function AgentDecisionLog({ logs, language }: AgentDecisionLogPro
               <span className="text-slate-600 flex-shrink-0">[{new Date(log.timestamp).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute:'2-digit', second:'2-digit' })}]</span>
               
               {/* Observability Badges */}
-              <span className="text-[10px] text-slate-700 font-bold tracking-wider flex-shrink-0 opacity-60">[TRACE:{traceId}]</span>
               <span className={`text-[10px] font-bold tracking-wider flex-shrink-0 ${getPathColor(path)} opacity-80`}>[PATH:{path}]</span>
               <span className={`text-[10px] font-bold tracking-wider flex-shrink-0 ${getSevColor(sev)} opacity-80`}>[SEV:{sev}]</span>
 

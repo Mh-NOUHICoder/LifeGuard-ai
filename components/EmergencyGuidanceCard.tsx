@@ -55,14 +55,14 @@ export default function EmergencyGuidanceCard({ type, dangerLevel, steps, warnin
           
           <div>
             <div className={`flex items-center gap-2 mb-1`}>
-              <span className={`text-[10px] font-bold tracking-[0.2em] uppercase px-2 py-0.5 rounded ${
+              <span className={`text-[8px] font-bold tracking-[0.2em] uppercase px-2 py-0.5 rounded ${
                 isCritical ? 'bg-red-500 text-white' : 'bg-emerald-500 text-slate-950'
               }`}>
                 {t(language, `dangerLevels.${dangerLevel}`) || dangerLevel}
               </span>
               <span className="text-white/40 text-[10px] font-mono tracking-widest uppercase">{t(language, 'app.systemActive')}</span>
             </div>
-            <h2 className="text-3xl font-black text-white tracking-tight uppercase italic leading-none">
+            <h2 className="text-2xl font-black text-white tracking-tight uppercase italic leading-none">
               {t(language, `emergencyTypes.${type}`) || type}
             </h2>
           </div>
@@ -117,7 +117,7 @@ export default function EmergencyGuidanceCard({ type, dangerLevel, steps, warnin
               </div>
 
               <div className="flex-1 pt-1">
-                <p className={`text-xl md:text-2xl leading-snug font-semibold tracking-tight ${
+                <p className={`text-lg md:text-xl leading-snug font-semibold tracking-tight ${
                   index === 0 ? 'text-white' : 'text-slate-400'
                 }`}>
                   {step}

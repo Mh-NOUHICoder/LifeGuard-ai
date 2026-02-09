@@ -51,7 +51,6 @@ const App: React.FC = () => {
     useState<AgentStateStore>(INITIAL_AGENT_STATE);
 
   const [emergencyNumber, setEmergencyNumber] = useState("112");
-  const [triggerGlitch, setTriggerGlitch] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -105,7 +104,10 @@ const App: React.FC = () => {
     try {
       if (!isActiveRef.current) return;
 
-      if (!isSecureContext()) console.warn("Insecure context");
+      if (!isSecureContext()) {
+        console.warn("Insecure context");
+        toast.warning("App may not function correctly in an insecure context (non-HTTPS).");
+      }
 
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
@@ -328,6 +330,7 @@ const App: React.FC = () => {
         ...p,
         severity,
         confidence: 90,
+        execution: { ...instruction, traceId: generateTraceId() },
       }));
 
       addLog("EXECUTION", "Broadcasting emergency guidance...");
@@ -342,10 +345,10 @@ const App: React.FC = () => {
             : AgentState.MONITORING,
       }));
 
-      speak(
-        [...instruction.actions, instruction.warning].join(". "),
-        state.language,
-      );
+      const textToSpeak = [...instruction.actions, instruction.warning]
+        .filter(Boolean)
+        .join(". ");
+      speak(textToSpeak, state.language);
     } catch (e: any) {
       if (abortController.signal.aborted) return;
 
@@ -475,7 +478,7 @@ const App: React.FC = () => {
         )}
       </AnimatePresence>
 
-      <EmergencyExecutionBanner execution={agentStore.execution} />
+      {isCritical && <EmergencyExecutionBanner execution={agentStore.execution} />}
 
       {/* HEADER */}
       <header className="fixed top-0 inset-x-0 z-50 bg-[#050507]/90 backdrop-blur border-b border-white/10 px-6 py-3 flex justify-between">

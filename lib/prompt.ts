@@ -72,6 +72,9 @@ LANGUAGE RULES:
 
 OUTPUT FORMAT (STRICT):
 Return ONLY a single valid JSON object using EXACTLY this structure:
+Do NOT wrap the JSON in markdown code blocks (e.g. \`\`\`json ... \`\`\`).
+Do NOT use markdown formatting.
+Return raw JSON only.
 
 {
   "type": "Severe Bleeding",
@@ -110,7 +113,7 @@ FIELD RULES:
 
 CRITICAL:
 - Do NOT add extra text.
-- Do NOT include markdown.
+- Do NOT use markdown formatting (no \`\`\`json wrappers).
 - Do NOT include explanations outside the JSON.
 - The entire response MUST be a single valid JSON object.
 `;

@@ -29,11 +29,22 @@ export const analyzeEmergency = async (
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      let errorData: any = {};
+      try {
+        errorData = await response.json();
+      } catch (e) {
+        console.error('[analyzeEmergency] Failed to parse error response JSON', e);
+      }
+      console.error('[analyzeEmergency] API Error:', response.status, errorData);
+      
+      const errorMessage = typeof errorData.error === 'string' 
+        ? errorData.error 
+        : (errorData.message || JSON.stringify(errorData));
+
       return {
         success: false,
         error: {
-          message: errorData.error || `API error: ${response.status}`,
+          message: errorMessage || `API error: ${response.status}`,
           errorType: errorData.errorType || 'error',
         },
       };

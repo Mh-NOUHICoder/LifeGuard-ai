@@ -2,8 +2,8 @@
 
 import { GoogleGenerativeAI, type GenerateContentRequest, type GenerateContentResult } from "@google/generative-ai";
 
-const MAX_RETRIES = 3;
-const BASE_DELAY_MS = 1000; // 1 second base delay
+const MAX_RETRIES = 5;
+const BASE_DELAY_MS = 2000; // 2 second base delay
 
 /**
  * Detects if an error is a 429 (RESOURCE_EXHAUSTED / quota exceeded) error.
@@ -15,13 +15,19 @@ function isRateLimitError(error: Error | unknown): boolean {
   const errorStr = String(error);
   const errorObj = error as unknown as Record<string, unknown>;
   const message = (errorObj?.message as string | undefined)?.toLowerCase?.() || "";
+  const status = errorObj?.status as number | undefined;
 
   return (
     message.includes("429") ||
+    message.includes("503") ||
     message.includes("resource_exhausted") ||
     message.includes("quota") ||
+    message.includes("overloaded") ||
+    message.includes("service_unavailable") ||
     errorStr.includes("429") ||
-    errorObj?.status === 429 ||
+    errorStr.includes("503") ||
+    status === 429 ||
+    status === 503 ||
     errorObj?.code === 8 || // RESOURCE_EXHAUSTED gRPC code
     (errorObj?.['google-rpc-error'] as Record<string, unknown> | undefined)?.code === 8
   );
