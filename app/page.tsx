@@ -87,7 +87,10 @@ const App: React.FC = () => {
       logs: [
         ...p.logs,
         {
-          id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(),
+          id:
+            typeof crypto !== "undefined" && crypto.randomUUID
+              ? crypto.randomUUID()
+              : Date.now().toString(),
           timestamp: Date.now(),
           type,
           message,
@@ -135,7 +138,7 @@ const App: React.FC = () => {
           console.log("Camera stream ready");
         };
       }
-      
+
       // Initialize Audio Recorder
       let mimeType = "";
       const possibleMimeTypes = [
@@ -153,7 +156,10 @@ const App: React.FC = () => {
       }
 
       try {
-        const recorder = new MediaRecorder(result.stream, mimeType ? { mimeType } : {});
+        const recorder = new MediaRecorder(
+          result.stream,
+          mimeType ? { mimeType } : {},
+        );
         recorder.ondataavailable = (e) => {
           if (e.data.size > 0) audioChunksRef.current.push(e.data);
         };
@@ -162,12 +168,12 @@ const App: React.FC = () => {
       } catch (e) {
         console.warn("Audio recording not supported or failed", e);
       }
-      
     } catch (err: any) {
-      toast.error("Failed to start camera: " + (err.message || "Unknown error"));
+      toast.error(
+        "Failed to start camera: " + (err.message || "Unknown error"),
+      );
     }
   }, []);
-  
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
@@ -183,7 +189,10 @@ const App: React.FC = () => {
       videoRef.current.srcObject = null;
     }
 
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+    if (
+      mediaRecorderRef.current &&
+      mediaRecorderRef.current.state !== "inactive"
+    ) {
       mediaRecorderRef.current.stop();
     }
     mediaRecorderRef.current = null;
@@ -240,11 +249,12 @@ const App: React.FC = () => {
 
     try {
       const video = videoRef.current;
-      
+
       // Ensure camera is actually ready to prevent black frames or errors
-      if (video.readyState < 2) { // HAVE_CURRENT_DATA
-         toast.warning("Camera initializing...");
-         throw new Error("Camera stream not ready");
+      if (video.readyState < 2) {
+        // HAVE_CURRENT_DATA
+        toast.warning("Camera initializing...");
+        throw new Error("Camera stream not ready");
       }
 
       const canvas = canvasRef.current;
@@ -260,12 +270,15 @@ const App: React.FC = () => {
 
       // Process Audio
       let audioBase64: string | null = null;
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
+      if (
+        mediaRecorderRef.current &&
+        mediaRecorderRef.current.state === "recording"
+      ) {
         const stopPromise = new Promise<void>((resolve) => {
           if (!mediaRecorderRef.current) return resolve();
           mediaRecorderRef.current.onstop = () => resolve();
         });
-        
+
         mediaRecorderRef.current.stop();
         await stopPromise;
 
@@ -273,7 +286,8 @@ const App: React.FC = () => {
           const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
           const reader = new FileReader();
           audioBase64 = await new Promise<string>((resolve) => {
-            reader.onloadend = () => resolve((reader.result as string).split(",")[1]);
+            reader.onloadend = () =>
+              resolve((reader.result as string).split(",")[1]);
             reader.readAsDataURL(blob);
           });
         }
@@ -296,9 +310,12 @@ const App: React.FC = () => {
       if (!analysis.success) throw new Error(analysis.error.message);
 
       const instruction = analysis.data;
-      
+
       addLog("DECISION", `Event Detected: ${instruction.type}`);
-      addLog("POLICY", `Loading protocol: ${instruction.type.toUpperCase()}_RESPONSE`);
+      addLog(
+        "POLICY",
+        `Loading protocol: ${instruction.type.toUpperCase()}_RESPONSE`,
+      );
 
       const severity =
         instruction.dangerLevel === "CRITICAL"
@@ -332,12 +349,19 @@ const App: React.FC = () => {
     } catch (e: any) {
       if (abortController.signal.aborted) return;
 
-      addLog("FAST_PATH", `Analysis retry ${retryCountRef.current + 1}/${MAX_RETRIES}`);
-      
+      addLog(
+        "FAST_PATH",
+        `Analysis retry ${retryCountRef.current + 1}/${MAX_RETRIES}`,
+      );
+
       // Don't retry if it was a camera ready error, just reset
       if (e.message === "Camera stream not ready") {
-         setState((p) => ({ ...p, isAnalyzing: false, agentState: AgentState.MONITORING }));
-         return;
+        setState((p) => ({
+          ...p,
+          isAnalyzing: false,
+          agentState: AgentState.MONITORING,
+        }));
+        return;
       }
 
       if (++retryCountRef.current <= MAX_RETRIES) {
@@ -384,6 +408,73 @@ const App: React.FC = () => {
       }`}
       dir={isRTL ? "rtl" : "ltr"}
     >
+      <AnimatePresence>
+        {showSplash && (
+          <motion.div
+            key="splash"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6 }}
+            className="fixed inset-0 z-[100] bg-[#050507] flex items-center justify-center overflow-hidden"
+          >
+            {/* Centered Wrapper */}
+            <div className="relative flex flex-col items-center justify-center w-full h-full">
+              {/* LOGO - Forced to center and scale from its own middle */}
+              <motion.div
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{
+                  scale: [0, 1, 20], // smoothly grows from 0 → normal → huge
+                  opacity: [0, 1, 1, 0], // fades in, stays visible
+                }}
+                transition={{
+                  duration: 4,
+                  ease: [0.25, 0.1, 0.25, 1], // smooth easeInOut curve
+                  times: [0, 0.3, 0.7, 1], // controls pacing of zoom
+                }}
+                className="absolute z-10 flex items-center justify-center"
+              >
+                <Image
+                  src="/assets/logo.png"
+                  alt="LifeGuard AI"
+                  width={180}
+                  height={180}
+                  priority
+                  className="drop-shadow-[0_0_50px_rgba(225,6,0,0.6)] object-contain"
+                />
+              </motion.div>
+
+              {/* TEXT & PROGRESS - Fades away just as logo starts to explode */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{
+                  opacity: [0, 1, 1, 0],
+                  y: 0,
+                }}
+                transition={{
+                  duration: 4,
+                  times: [0, 0.15, 0.75, 0.85],
+                  ease: "easeOut",
+                }}
+                className="mt-48 flex flex-col items-center"
+              >
+                <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-white">
+                  LIFEGUARD <span className="text-[#E10600]">AI</span>
+                </h1>
+
+                <div className="mt-6 h-1.5 w-40 bg-white/10 rounded-full overflow-hidden">
+                  <motion.div
+                    className="h-full bg-[#E10600]"
+                    initial={{ width: "0%" }}
+                    animate={{ width: "100%" }}
+                    transition={{ duration: 3, ease: "easeInOut" }}
+                  />
+                </div>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <EmergencyExecutionBanner execution={agentStore.execution} />
 
       {/* HEADER */}
