@@ -199,34 +199,58 @@ http://localhost:3000
 
 ```
 lifeguard-ai/
-├── app/                        # The "Brain" of the Application
+├── app/                        # The "Brain" (Routing + AI Entry Points)
 │   ├── api/
-│   │   ├── analyze/route.ts    # Core AI analysis engine
-│   │   └── test-gemini/        # Dev testing for AI
-│   ├── emergency/page.tsx      # Specialized emergency interface
-│   ├── globals.css             # Global styling and colors
-│   ├── layout.tsx              # Main wrapper for the app
-│   └── page.tsx                # Landing page & entry point
-├── components/                 # The "Body" (UI Elements)
-│   ├── CameraCapture.tsx       # Live camera & audio
-│   ├── DangerAlert.tsx         # High-risk visual alerts
-│   ├── EmergencyButton.tsx     # Push for help button
-│   ├── LanguageSelector.tsx    # Multilingual toggle
-│   └── DebugPanel.tsx          # Developer AI monitoring
-├── lib/                        # The "Nervous System" (Core Logic)
-│   ├── gemini.ts               # Bridge to Google Gemini AI
-│   ├── prompt.ts               # AI reasoning logic
+│   │   ├── analyze/
+│   │   │   └── route.ts        # Emergency analysis API (Gemini-powered)
+│   │   └── test-gemini/
+│   │       └── route.ts        # Gemini dev/testing endpoint
+│   ├── emergency/
+│   │   └── page.tsx            # Emergency-focused UI flow
+│   ├── globals.css             # Global styles & theme
+│   ├── layout.tsx              # Root layout wrapper
+│   └── page.tsx                # Main entry point
+│
+├── components/                 # The "Body" (Agent Visualization & Control)
+│   ├── AIReasoningPanel.tsx    # Live AI reasoning steps (agent thinking)
+│   ├── AgentDecisionLog.tsx    # Chronological agent decisions/actions
+│   ├── AgentLatencyPanel.tsx   # Agent & Gemini response latency
+│   ├── CameraCapture.tsx       # Camera + audio input
+│   ├── DangerAlert.tsx         # Critical-risk alert UI
+│   ├── DebugPanel.tsx          # Dev diagnostics & agent state
+│   ├── EmergencyButton.tsx     # Emergency trigger (animated)
+│   ├── EmergencyExecutionBanner.tsx # Agent execution status
+│   ├── EmergencyGuidanceCard.tsx     # Step-by-step emergency guidance
+│   ├── ErrorToast.tsx          # Error & system feedback
+│   ├── LanguageSelector.tsx    # i18n selector
+│   └── SeverityScoreCard.tsx   # Risk/severity score visualization
+│
+├── lib/                        # The "Nervous System" (Core Agent Logic)
+│   ├── agent-store.ts          # Global agent state management
+│   ├── agent.ts                # Core agent orchestration logic
+│   ├── gemini-api.ts           # Low-level Gemini API calls
+│   ├── gemini.ts               # Gemini abstraction / helpers
+│   ├── prompt.ts               # Agent prompt + reasoning instructions
+│   ├── permissions.ts          # Camera & microphone permissions
+│   ├── translations.ts         # i18n dictionaries & language config
 │   ├── tts.ts                  # Text-to-Speech engine
-│   ├── translations.ts         # Multi-language dictionary
-│   └── permissions.ts          # Camera/microphone access
-├── public/                     # The "Visuals"
-│   ├── assets/                 # Logos and graphics
-│   ├── icons/                  # Mobile app icons
-│   ├── manifest.json           # Makes app installable (PWA)
+│   └── utils.ts                # Shared helper utilities
+│
+├── types/                      # Strong Typing Layer
+│   ├── agent.ts                # Agent state, decisions, lifecycle types
+│   └── gemini.ts               # Gemini request/response types
+│
+├── public/                     # Static Assets & PWA
+│   ├── assets/                 # Logos & images
+│   ├── icons/                  # PWA icons
+│   ├── manifest.json           # PWA manifest
 │   └── sw.js                   # Service worker
-├── types/                      # Code "Definitions"
-│   └── gemini.ts               # AI response types
-└── README.md                   # Full documentation
+│
+├── package.json
+├── tsconfig.json
+├── tailwind.config.js
+├── next.config.js
+└── README.md                  # Full documentation
 ```
 
 
