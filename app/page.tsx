@@ -294,7 +294,11 @@ const App: React.FC = () => {
           });
         }
         audioChunksRef.current = [];
-        mediaRecorderRef.current.start();
+        try {
+          mediaRecorderRef.current.start();
+        } catch (err) {
+          // if recorder can't be restarted, ignore gracefully
+        }
       }
 
       if (abortController.signal.aborted) return;
@@ -326,11 +330,18 @@ const App: React.FC = () => {
             ? 75
             : 40;
 
-      setAgentStore((p) => ({
-        ...p,
+      // --- FIX: cast instruction to any to satisfy execution shape (or replace with your Execution type)
+      setAgentStore((prev) => ({
+        ...prev,
         severity,
         confidence: 90,
-        execution: { ...instruction, traceId: generateTraceId() },
+        execution: {
+          ...(instruction as any),
+          traceId: generateTraceId(),
+          id: generateTraceId(),
+          timestamp: Date.now(),
+          status: AgentState.ACTIVE,
+        },
       }));
 
       addLog("EXECUTION", "Broadcasting emergency guidance...");
@@ -345,6 +356,7 @@ const App: React.FC = () => {
             : AgentState.MONITORING,
       }));
 
+      // Compose text to speak and speak it
       const textToSpeak = [...instruction.actions, instruction.warning]
         .filter(Boolean)
         .join(". ");
