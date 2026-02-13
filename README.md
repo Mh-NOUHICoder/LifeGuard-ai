@@ -19,7 +19,8 @@
 ---
 ## 🎬 Demo
 
-[![LifeGuard AI Demo](https://img.youtube.com/vi/TT9MMgEBpVA/maxresdefault.jpg)](https://youtu.be/TT9MMgEBpVA)
+[![LifeGuard AI Demo](./public/demo-thumbnail.png)](https://vimeo.com/1163656886)
+
 
 ▶️ Click the image to watch the full demo.
 
